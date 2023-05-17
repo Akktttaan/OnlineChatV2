@@ -361,3 +361,47 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+WebApp/.vscode
+
+
+# Compiled output
+WebApp/dist
+WebApp/tmp
+WebApp/out-tsc
+WebApp/bazel-out
+
+# Node
+WebApp/node_modules
+WebApp/npm-debug.log
+WebApp/yarn-error.log
+
+# IDEs and editors
+WebApp/.idea/
+WebApp/.project
+WebApp/.classpath
+WebApp/.c9/
+WebApp/*.launch
+WebApp/.settings/
+WebApp/*.sublime-workspace
+
+# Visual Studio Code
+WebApp/.vscode/*
+WebApp/!.vscode/settings.json
+WebApp/!.vscode/tasks.json
+WebApp/!.vscode/launch.json
+WebApp/!.vscode/extensions.json
+WebApp/.history/*
+
+# Miscellaneous
+WebApp/.angular/cache
+WebApp/.sass-cache/
+WebApp/connect.lock
+WebApp/coverage
+WebApp/libpeerconnection.log
+WebApp/testem.log
+WebApp/typings
+
+# System files
+WebApp/.DS_Store
+WebApp/Thumbs.db
+OnlineChatV2.Api/.idea
