@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineChatV2.WebApi", "OnlineChatV2.WebApi\OnlineChatV2.WebApi.csproj", "{84FE529B-851D-4C3D-8F73-FBC55351299D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineChatV2.Dal", "OnlineChatV2.Dal\OnlineChatV2.Dal.csproj", "{2DEAED97-5DC9-4192-8B96-42D4B89C7D8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{84FE529B-851D-4C3D-8F73-FBC55351299D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84FE529B-851D-4C3D-8F73-FBC55351299D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84FE529B-851D-4C3D-8F73-FBC55351299D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DEAED97-5DC9-4192-8B96-42D4B89C7D8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DEAED97-5DC9-4192-8B96-42D4B89C7D8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DEAED97-5DC9-4192-8B96-42D4B89C7D8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DEAED97-5DC9-4192-8B96-42D4B89C7D8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
