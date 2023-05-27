@@ -405,3 +405,4 @@ WebApp/typings
 WebApp/.DS_Store
 WebApp/Thumbs.db
 OnlineChatV2.Api/.idea
+OnlineChatV2.Api/appsettings.json
