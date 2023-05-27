@@ -1,3 +1,5 @@
+using OnlineChatV2.WebApi.Hubs;
+using OnlineChatV2.WebApi.Hubs.EventManagement;
 using OnlineChatV2.WebApi.Infrastructure.Middlewares;
 using OnlineChatV2.WebApi.Services;
 
@@ -12,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddConfiguration(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAuth();
+builder.Services.AddSingleton<EventBus>();
 
 var app = builder.Build();
 
@@ -28,5 +31,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/chat");
+app.MapHub<NotifyHub>("/notify");
 
 app.Run();
