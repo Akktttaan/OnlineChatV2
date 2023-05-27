@@ -22,15 +22,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
     
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        User? user = null;
-        try
-        {
-            user = ((Task<User?>)context.HttpContext.Items["User"])?.Result;
-        }
-        catch (InvalidCastException e)
-        {
-            user = (User)context.HttpContext.Items["User"];
-        }
+        var user = (User?)context.HttpContext.Items["User"];
 
         if (user == null)
         {

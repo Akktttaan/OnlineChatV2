@@ -25,13 +25,13 @@ public class JwtMiddleware
 
         if (token != null)
         {
-            AttachUserToContext(context, authService, token);
+            await AttachUserToContext(context, authService, token);
         }
 
         await _next(context);
     }
 
-    private void AttachUserToContext(HttpContext context, IUserService authService, string token)
+    private async Task AttachUserToContext(HttpContext context, IUserService authService, string token)
     {
         try
         {
@@ -50,7 +50,7 @@ public class JwtMiddleware
             var jwt = (JwtSecurityToken)validatedToken;
             var userId = int.Parse(jwt.Claims.First(x => x.Type == "id").Value);
 
-            context.Items["User"] = authService.GetUserById(userId);
+            context.Items["User"] = await authService.GetUserById(userId);
         }
         catch 
         {
