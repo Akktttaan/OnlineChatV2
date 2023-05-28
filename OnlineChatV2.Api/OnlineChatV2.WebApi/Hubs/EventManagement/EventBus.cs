@@ -8,10 +8,10 @@ public class EventBus
     private readonly ConcurrentDictionary<Type, List<WeakReference<IBaseEventReceiver>>> _receivers;
     private readonly ConcurrentDictionary<int, WeakReference<IBaseEventReceiver>> _receiversHashToRef;
 
-    public EventBus(ConcurrentDictionary<int, WeakReference<IBaseEventReceiver>> receiversHashToRef)
+    public EventBus()
     {
-        _receiversHashToRef = receiversHashToRef;
-        _receivers = new ConcurrentDictionary<Type, List<WeakReference<IBaseEventReceiver>>>();
+        _receiversHashToRef = new();
+        _receivers = new();
     }
 
     public void Register<T>(IEventReceiver<T> receiver) where T : struct, IEvent
