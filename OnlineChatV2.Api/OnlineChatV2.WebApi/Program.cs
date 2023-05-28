@@ -1,8 +1,12 @@
+using Microsoft.AspNetCore.SignalR;
 using OnlineChatV2.Dal;
 using OnlineChatV2.WebApi.Hubs;
 using OnlineChatV2.WebApi.Hubs.EventManagement;
+using OnlineChatV2.WebApi.Infrastructure;
 using OnlineChatV2.WebApi.Infrastructure.Middlewares;
 using OnlineChatV2.WebApi.Services;
+using OnlineChatV2.WebApi.Services.Base;
+using OnlineChatV2.WebApi.Services.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +21,9 @@ builder.Services
     .AddDatabase(builder.Configuration)
     .AddAuth()
     .AddSingleton<EventBus>()
+    .AddTransient<IChatService, ChatService>()
     .AddCorsPolicy()
-    .AddSignalR();
+    .AddSignalR(opt => opt.AddFilter<AuthHubFilter>());
 
 var app = builder.Build();
 

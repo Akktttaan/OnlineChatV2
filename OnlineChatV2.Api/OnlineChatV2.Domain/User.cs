@@ -14,6 +14,6 @@ public class User
     [JsonIgnore]
     public string Password { get; set; }
     public ICollection<UserRole> UserRoles { get; set; }
-
+    public ICollection<ChatUser> Chats { get; set; }
 
 }

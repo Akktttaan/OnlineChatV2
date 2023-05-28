@@ -1,36 +1,45 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
-using OnlineChatV2.WebApi.Services;
 using OnlineChatV2.WebApi.Services.Base;
-using OnlineChatV2.WebApi.Services.Implementation;
 
-namespace OnlineChatV2.WebApi.Infrastructure.Middlewares;
+namespace OnlineChatV2.WebApi.Infrastructure;
 
-public class JwtMiddleware
+public class AuthHubFilter : IHubFilter
 {
-    private readonly RequestDelegate _next;
+    private readonly IUserService _userService;
     private readonly IConfiguration _configuration;
 
-    public JwtMiddleware(RequestDelegate next, IConfiguration configuration)
+    public AuthHubFilter(IUserService userService, IConfiguration configuration)
     {
-        _next = next;
+        _userService = userService;
         _configuration = configuration;
     }
-
-    public async Task Invoke(HttpContext context, [FromServices] IUserService authService)
+    
+    public async ValueTask<object?> InvokeMethodAsync(
+        HubInvocationContext invocationContext, 
+        Func<HubInvocationContext, ValueTask<object?>> next)
     {
-        var token = context.Request.Headers["UserToken"].FirstOrDefault();
-
-        if (!string.IsNullOrEmpty(token))
+        var context = invocationContext.Hub.Context.GetHttpContext();
+        try
         {
-            await AttachUserToContext(context, authService, token);
+            if(context == null)
+                return await next(invocationContext);   
+            
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken))
+                await AttachUserToContext(context, _userService, accessToken);
+
+            return await next(invocationContext);   
         }
-
-        await _next(context);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Не удалось вызвать метод {invocationContext.HubMethodName}: {ex.Message}");
+            throw;
+        }
     }
-
+    
     private async Task AttachUserToContext(HttpContext context, IUserService authService, string token)
     {
         try
@@ -52,9 +61,6 @@ public class JwtMiddleware
 
             context.Items["User"] = await authService.GetUserById(userId);
         }
-        catch 
-        {
-            
-        }
+        catch {}
     }
 }
