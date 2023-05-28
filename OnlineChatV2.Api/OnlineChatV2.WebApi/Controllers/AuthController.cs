@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using OnlineChatV2.WebApi.Infrastructure;
 using OnlineChatV2.WebApi.Models;
 using OnlineChatV2.WebApi.Services.Base;
@@ -7,6 +8,7 @@ namespace OnlineChatV2.WebApi.Controllers;
 
 [ApiController]
 [Route("/api/user/")]
+[EnableCors("CorsPolicy")]
 public class AuthController : ControllerBase
 {
     private readonly IUserService _authService;
@@ -40,12 +42,14 @@ public class AuthController : ControllerBase
     
     [Authorize]
     [HttpGet("verify")]
+    [ProducesResponseType(200)]
     public IActionResult VerifyToken()
     {
         return Ok();
     }
 
     [HttpPost("auth")]
+    [ProducesResponseType(typeof(AuthenticateResponse),200)]
     public async Task<IActionResult> Auth([FromBody] LoginDto dto)
     {
         var response = await _authService.Auth(dto.NameOrEmail, dto.Password);
@@ -58,6 +62,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [ProducesResponseType(typeof(AuthenticateResponse),200)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         var response = await _authService.Register(dto.Username, dto.Password, dto.Email);

@@ -7,7 +7,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {RouterLink} from "@angular/router";
-import {NgIf} from "@angular/common";
+import {AsyncPipe, NgIf} from "@angular/common";
 
 
 @NgModule({
@@ -15,16 +15,17 @@ import {NgIf} from "@angular/common";
     LoginComponent,
     RegisterComponent
   ],
-  imports: [
-    MatFormFieldModule,
-    MatInputModule,
-    FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    RouterLink,
-    ReactiveFormsModule,
-    NgIf
-  ]
+    imports: [
+        MatFormFieldModule,
+        MatInputModule,
+        FormsModule,
+        MatButtonModule,
+        MatCardModule,
+        RouterLink,
+        ReactiveFormsModule,
+        NgIf,
+        AsyncPipe
+    ]
 })
 export class AuthModule {
 }

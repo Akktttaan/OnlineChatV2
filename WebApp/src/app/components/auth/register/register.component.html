@@ -3,6 +3,10 @@
     <mat-card>
       <mat-card-title>Регистрация</mat-card-title>
       <mat-card-content>
+        <mat-form-field appearance="outline">
+          <mat-label>Имя пользователя:</mat-label>
+          <input formControlName="username" matInput type="email">
+        </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Email:</mat-label>
             <input formControlName="email" matInput type="email">
@@ -26,7 +30,12 @@
       </mat-card-content>
       <mat-card-actions>
         <button mat-button type="button" [routerLink]="['/login']">Войти</button>
-        <button mat-raised-button color="primary" type="submit">Создать аккаунт</button>
+        <button mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="dataForm.invalid || dataForm.disabled"
+        >Создать аккаунт
+        </button>
       </mat-card-actions>
     </mat-card>
   </form>

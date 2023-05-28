@@ -43,12 +43,9 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/indigo-pink.css",
-              "src/styles.sass",
-              "node_modules/materialize-css/dist/css/materialize.css"
+              "src/styles.sass"
             ],
-            "scripts": [
-              "node_modules/materialize-css/dist/js/materialize.js"
-            ]
+            "scripts": []
           },
           "configurations": {
             "production": {

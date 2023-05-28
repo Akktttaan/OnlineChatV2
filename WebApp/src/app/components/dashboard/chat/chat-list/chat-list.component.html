@@ -1,0 +1,27 @@
+<!-- Панель со списком чатов -->
+<div class="chat-panel">
+  <div class="chat-header">
+    <button (click)="openSettings()" #settingsButton mat-icon-button color="primary" class="settings-button">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <div class="custom-search">
+      <div class="search-icon">
+        <i class="material-icons">search</i>
+      </div>
+      <input type="text" class="search-input" placeholder="Поиск">
+    </div>
+  </div>
+  <div class="chat-list">
+    <!-- Блок чата -->
+    <div class="chat-item" *ngFor="let chat of chats">
+      <div class="avatar"></div>
+      <div class="chat-info">
+        <p class="chat-name">{{ chat.name }}</p>
+        <p class="chat-details">
+          <span class="last-message">{{ chat.lastMessage }}</span>
+          <span class="last-message-time">{{ chat.lastMessageTime }}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

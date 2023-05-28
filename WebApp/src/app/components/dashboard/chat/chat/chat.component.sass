@@ -1,0 +1,15 @@
+.chat-container
+  display: flex
+  width: 100vw
+  height: 100vh
+
+.box
+  flex: 2 2 calc(50% - 10px)
+  margin: 5px
+  overflow-x: hidden
+
+.box:first-child,
+.box:last-child
+  flex: 1 1 calc(25% - 10px)
+  margin: 5px
+  overflow-x: hidden
