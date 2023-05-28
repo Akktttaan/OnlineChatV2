@@ -15,6 +15,7 @@ builder.Services.AddConfiguration(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddAuth();
 builder.Services.AddSingleton<EventBus>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
