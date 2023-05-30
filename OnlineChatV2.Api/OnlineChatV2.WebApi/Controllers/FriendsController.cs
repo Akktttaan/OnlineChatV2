@@ -22,11 +22,11 @@ public class FriendsController : ControllerBase
     [SameUserCheck]
     [Authorize]
     [ProducesResponseType(200)]
-    public async Task<IActionResult> AddContact(long userId, long contactId)
+    public async Task<IActionResult> AddContact([FromBody] ContactOperationDto contactDto)
     {
         try
         {
-            await _contactsService.AddContact(userId, contactId);
+            await _contactsService.AddContact(contactDto.UserId, contactDto.ContactId);
             return Ok();
         }
         catch (InvalidOperationException e)
@@ -38,11 +38,11 @@ public class FriendsController : ControllerBase
     [HttpDelete("delete")]
     [SameUserCheck]
     [Authorize]
-    public async Task<IActionResult> DeleteContact(long userId, long contactId)
+    public async Task<IActionResult> DeleteContact([FromBody] ContactOperationDto contactDto)
     {
         try
         {
-            await _contactsService.AddContact(userId, contactId);
+            await _contactsService.AddContact(contactDto.UserId, contactDto.ContactId);
             return Ok();
         }
         catch (Exception e)
