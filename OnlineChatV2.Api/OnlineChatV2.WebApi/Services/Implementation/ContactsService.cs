@@ -48,4 +48,12 @@ public class ContactsService : IContactsService
         _commandDb.UsersContacts.Remove(user);
         await _commandDb.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<ContactModel>> SearchUsers(string searchString)
+    {
+        return await _queryDb.Users
+            .Where(u => EF.Functions.Like(u.Username.ToLower(), "%" + searchString.ToLower() + "%"))
+            .Select(x => new ContactModel() { UserId = x.Id, Username = x.Username })
+            .ToArrayAsync();
+    }
 }

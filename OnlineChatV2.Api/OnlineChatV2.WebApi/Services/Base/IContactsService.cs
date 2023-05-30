@@ -7,4 +7,5 @@ public interface IContactsService
     Task AddContact(long userId, long contactId);
     Task<IEnumerable<ContactModel>> GetUserContacts(long userId);
     Task RemoveContact(long userId, long contactId);
+    Task<IEnumerable<ContactModel>> SearchUsers(string searchString);
 }

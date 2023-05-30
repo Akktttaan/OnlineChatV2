@@ -59,4 +59,12 @@ public class FriendsController : ControllerBase
     {
         return await _contactsService.GetUserContacts(userId);
     }
+
+    [HttpGet("search")]
+    [Authorize]
+    [ProducesResponseType(typeof(ContactModel[]), 200)]
+    public async Task<IEnumerable<ContactModel>> SearchContacts(string searchString)
+    {
+        return await _contactsService.SearchUsers(searchString);
+    }
 }
