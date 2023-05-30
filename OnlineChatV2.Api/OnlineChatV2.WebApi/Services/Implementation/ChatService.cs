@@ -36,19 +36,19 @@ public class ChatService : IChatService
 
     public async Task<CreateChatResult> CreateChat(CreateChatModel model)
     {
-        if (await _commandDb.Users.FindAsync(model.CreateById) == null)
+        if (await _commandDb.Users.FindAsync(model.CreatedById) == null)
             throw new ArgumentException("Not valid owner id");
         
         var chat = new Chat
         {
             Name = model.ChatName,
-            OwnerId = model.CreateById
+            OwnerId = model.CreatedById
         };
         await _commandDb.AddAsync(chat);
         await _commandDb.SaveChangesAsync();
         
         var chatUsers = new LinkedList<ChatUser>();
-        foreach (var userId in model.ChatUsersId)
+        foreach (var userId in model.ChatUserIds)
         {
             var user = await _commandDb.Users.FindAsync(userId);
             if (user == null)

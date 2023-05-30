@@ -2,7 +2,7 @@
 
 public class CreateChatModel
 {
-    public long CreateById { get; set; }
-    public long[] ChatUsersId { get; set; }
+    public long CreatedById { get; set; }
+    public long[] ChatUserIds { get; set; }
     public string ChatName { get; set; }
 }
