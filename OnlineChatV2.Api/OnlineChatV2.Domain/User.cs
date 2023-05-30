@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -24,4 +25,19 @@ public class User
     public ICollection<Message> IncomingMessages { get; set; }
     [JsonIgnore]
     public ICollection<ReadMessage> ReadMessages { get; set; }
+    
+    /// <summary>
+    /// Список контактов юзера
+    /// </summary>
+    [JsonIgnore]
+    [InverseProperty("ContactOwner")]
+    public ICollection<UserContact> Contacts { get; set; }
+    
+    /// <summary>
+    /// У кого данный юзер находится в контактах
+    /// </summary>
+    [JsonIgnore]
+    [InverseProperty("Contact")]
+    public ICollection<UserContact> InContacts { get; set; }
+    
 }

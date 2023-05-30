@@ -22,6 +22,7 @@ builder.Services
     .AddAuth()
     .AddSingleton<EventBus>()
     .AddTransient<IChatService, ChatService>()
+    .AddScoped<IContactsService, ContactsService>()
     .AddCorsPolicy()
     .AddSignalR(opt => opt.AddFilter<AuthHubFilter>());
 

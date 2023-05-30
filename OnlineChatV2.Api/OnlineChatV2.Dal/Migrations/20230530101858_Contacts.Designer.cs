@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OnlineChatV2.Dal;
@@ -11,9 +12,10 @@ using OnlineChatV2.Dal;
 namespace OnlineChatV2.Dal.Migrations
 {
     [DbContext(typeof(CommandDbContext))]
-    partial class CommandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230530101858_Contacts")]
+    partial class Contacts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -184,7 +186,7 @@ namespace OnlineChatV2.Dal.Migrations
 
                     b.HasIndex("ContactOwnerId");
 
-                    b.ToTable("UsersContacts");
+                    b.ToTable("UserContact");
                 });
 
             modelBuilder.Entity("OnlineChatV2.Domain.UserRole", b =>
@@ -276,13 +278,13 @@ namespace OnlineChatV2.Dal.Migrations
             modelBuilder.Entity("OnlineChatV2.Domain.UserContact", b =>
                 {
                     b.HasOne("OnlineChatV2.Domain.User", "Contact")
-                        .WithMany("InContacts")
+                        .WithMany("Contacts")
                         .HasForeignKey("ContactId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("OnlineChatV2.Domain.User", "ContactOwner")
-                        .WithMany("Contacts")
+                        .WithMany("InContacts")
                         .HasForeignKey("ContactOwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

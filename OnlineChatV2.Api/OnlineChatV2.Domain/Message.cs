@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OnlineChatV2.Domain;
 
@@ -17,12 +18,14 @@ public class Message
     /// Для кого сообщение - null если сообщение из чата
     /// </summary>
     public long ToUserId { get; set; }
+    [InverseProperty("IncomingMessages")]
     public User ToUser { get; set; }
     
     /// <summary>
     /// От кого сообщение
     /// </summary>
     public long FromUserId { get; set; }
+    [InverseProperty("OutgoingMessages")]
     public User FromUser { get; set; }
     
     /// <summary>

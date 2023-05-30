@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OnlineChatV2.Dal;
@@ -11,9 +12,10 @@ using OnlineChatV2.Dal;
 namespace OnlineChatV2.Dal.Migrations
 {
     [DbContext(typeof(CommandDbContext))]
-    partial class CommandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230530095732_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,29 +166,6 @@ namespace OnlineChatV2.Dal.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("OnlineChatV2.Domain.UserContact", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("ContactId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ContactOwnerId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContactId");
-
-                    b.HasIndex("ContactOwnerId");
-
-                    b.ToTable("UsersContacts");
-                });
-
             modelBuilder.Entity("OnlineChatV2.Domain.UserRole", b =>
                 {
                     b.Property<long>("Id")
@@ -273,25 +252,6 @@ namespace OnlineChatV2.Dal.Migrations
                     b.Navigation("ReadBy");
                 });
 
-            modelBuilder.Entity("OnlineChatV2.Domain.UserContact", b =>
-                {
-                    b.HasOne("OnlineChatV2.Domain.User", "Contact")
-                        .WithMany("InContacts")
-                        .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OnlineChatV2.Domain.User", "ContactOwner")
-                        .WithMany("Contacts")
-                        .HasForeignKey("ContactOwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Contact");
-
-                    b.Navigation("ContactOwner");
-                });
-
             modelBuilder.Entity("OnlineChatV2.Domain.UserRole", b =>
                 {
                     b.HasOne("OnlineChatV2.Domain.Role", "Role")
@@ -331,10 +291,6 @@ namespace OnlineChatV2.Dal.Migrations
             modelBuilder.Entity("OnlineChatV2.Domain.User", b =>
                 {
                     b.Navigation("Chats");
-
-                    b.Navigation("Contacts");
-
-                    b.Navigation("InContacts");
 
                     b.Navigation("IncomingMessages");
 

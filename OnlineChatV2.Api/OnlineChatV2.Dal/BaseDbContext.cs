@@ -10,6 +10,9 @@ public class BaseDbContext : DbContext
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<Chat> Chats { get; set; }
     public DbSet<ChatUser> ChatUsers { get; set; }
+    public DbSet<Message> Messages { get; set; }
+    public DbSet<ReadMessage> ReadMessages { get; set; }
+    public DbSet<UserContact> UsersContacts { get; set; }
 
     public BaseDbContext(DbContextOptions options) : base(options)
     {
