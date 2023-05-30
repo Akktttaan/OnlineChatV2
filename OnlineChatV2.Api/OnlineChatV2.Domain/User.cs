@@ -2,9 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace OnlineChatV2.Domain;
 
+[Index(nameof(Username), Name = "IX_Username")]
 public class User
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
