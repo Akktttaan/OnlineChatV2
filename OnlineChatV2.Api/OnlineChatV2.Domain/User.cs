@@ -13,7 +13,15 @@ public class User
     
     [JsonIgnore]
     public string Password { get; set; }
+    
+    [JsonIgnore]
     public ICollection<UserRole> UserRoles { get; set; }
+    [JsonIgnore]
     public ICollection<ChatUser> Chats { get; set; }
-
+    [JsonIgnore]
+    public ICollection<Message> OutgoingMessages { get; set; }
+    [JsonIgnore]
+    public ICollection<Message> IncomingMessages { get; set; }
+    [JsonIgnore]
+    public ICollection<ReadMessage> ReadMessages { get; set; }
 }
