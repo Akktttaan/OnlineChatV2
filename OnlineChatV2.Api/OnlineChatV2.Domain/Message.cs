@@ -1,8 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace OnlineChatV2.Domain;
 
+[Index(nameof(ChatId), Name = "IX_Chats")]
+[Index(nameof(ToUserId), Name = "IX_PrivateChats")]
+[Index(nameof(FromUserId), Name = "IX_Sender")]
 public class Message
 {
     [Key]
@@ -11,13 +15,13 @@ public class Message
     /// <summary>
     /// Из какого чата сообщение - null если сообщение из лички
     /// </summary>
-    public long ChatId { get; set; }
+    public long? ChatId { get; set; }
     public Chat Chat { get; set; }
     
     /// <summary>
     /// Для кого сообщение - null если сообщение из чата
     /// </summary>
-    public long ToUserId { get; set; }
+    public long? ToUserId { get; set; }
     [InverseProperty("IncomingMessages")]
     public User ToUser { get; set; }
     
@@ -38,6 +42,9 @@ public class Message
     /// </summary>
     public string MessageText { get; set; }
     
-    
+    /// <summary>
+    /// Время отправки
+    /// </summary>
+    public DateTime MessageDate { get; set; }
     //todo все остальное
 }

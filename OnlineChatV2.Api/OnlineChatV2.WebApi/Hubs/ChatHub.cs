@@ -61,6 +61,26 @@ public class ChatHub : BaseChatHub
         //_eventBus.Invoke(new MessageSend() {From = user.Id, To = chatId, Message = "Test"});
     }
 
+    public async Task<long> CreateChat(CreateChatModel model)
+    {
+        var result = await _chatService.CreateChat(model);
+        _eventBus.Invoke(new ChatCreated()
+        {
+            ChatId = result.Id,
+            ChatName = model.ChatName,
+            WhoAdded = result.WhoAdded
+        });
+        return result.Id;
+    }
+
+    public async Task<ChatModel[]> GetUserChats(long userId)
+    {
+        var user = GetUserFromContext(HttpContext);
+        if (user == null) return null;
+        if (user.Id != userId) return null;
+        return await _chatService.GetUserChats(userId);
+    }
+    
     public async Task UserWriteEvent()
     {
         _eventBus.Invoke(new UserWrite());

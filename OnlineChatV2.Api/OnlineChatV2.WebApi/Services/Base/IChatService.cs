@@ -9,4 +9,7 @@ public interface IChatService
     Task<bool> IsUserInChat(long userId);
     
     Task<bool> IsChatExist(long chatId);
+    Task<CreateChatResult> CreateChat(CreateChatModel model);
+
+    Task<ChatModel[]> GetUserChats(long userId);
 }

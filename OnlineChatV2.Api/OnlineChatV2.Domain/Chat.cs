@@ -9,4 +9,6 @@ public class Chat
     public string Name { get; set; }
     public ICollection<ChatUser> ChatUsers { get; set; }
     public ICollection<Message> Messages { get; set; }
+    public long OwnerId { get; set; }
+    public User Owner { get; set; }
 }

@@ -42,4 +42,9 @@ public class User
     [InverseProperty("Contact")]
     public ICollection<UserContact> InContacts { get; set; }
     
+    /// <summary>
+    /// Где является владельцем чата
+    /// </summary>
+    public ICollection<Chat> ChatsOwner { get; set; }
+    
 }
