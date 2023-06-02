@@ -7,6 +7,8 @@ import {first, tap} from "rxjs/operators";
 })
 export class AuthService {
   private token: string | null | undefined = null;
+  // @ts-ignore
+  private tokenExpiredDate: Date;
 
   constructor(private api: OnlineChatClient) {
   }
@@ -16,9 +18,16 @@ export class AuthService {
       .pipe(
         first(),
         tap(res => {
+          const expiredDate = Date.now() + (7 * 24 * 60 * 60 * 1000)
           // @ts-ignore
           localStorage.setItem('auth-token', res.token)
+          // @ts-ignore
+          localStorage.setItem('clientId', res.id)
+          // @ts-ignore
+          localStorage.setItem('tokenExpiredDate', expiredDate)
           this.setToken(res.token)
+          // @ts-ignore
+          this.setExpiredDate(expiredDate);
         })
       )
   }
@@ -28,14 +37,21 @@ export class AuthService {
       .pipe(
         first(),
         tap(res => {
+          const expiredDate = Date.now() + (7 * 24 * 60 * 60 * 1000)
           // @ts-ignore
           localStorage.setItem('auth-token', res.token)
+          // @ts-ignore
+          localStorage.setItem('clientId', res.id)
+          // @ts-ignore
+          localStorage.setItem('tokenExpiredDate', expiredDate)
           this.setToken(res.token)
+          // @ts-ignore
+          this.setExpiredDate(expiredDate);
         })
       )
   }
 
-  public verifyToken(){
+  public verifyToken() {
     return this.api.verify()
   }
 
@@ -47,8 +63,16 @@ export class AuthService {
     return this.token;
   }
 
+  public setExpiredDate(date: Date) {
+    this.tokenExpiredDate = date;
+  }
+
   public isAuthenticated(): boolean {
-    return !!this.token;
+    if (this.tokenExpiredDate < new Date()) {
+      return false
+    } else {
+      return !!this.token;
+    }
   }
 
   public logout() {

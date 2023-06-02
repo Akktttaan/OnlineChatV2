@@ -8,24 +8,26 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {RouterLink} from "@angular/router";
 import {AsyncPipe, NgIf} from "@angular/common";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 
 @NgModule({
   declarations: [
     LoginComponent,
-    RegisterComponent
+    RegisterComponent,
   ],
-    imports: [
-        MatFormFieldModule,
-        MatInputModule,
-        FormsModule,
-        MatButtonModule,
-        MatCardModule,
-        RouterLink,
-        ReactiveFormsModule,
-        NgIf,
-        AsyncPipe
-    ]
+  imports: [
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    RouterLink,
+    ReactiveFormsModule,
+    NgIf,
+    AsyncPipe,
+    MatProgressSpinnerModule
+  ]
 })
 export class AuthModule {
 }

@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
+import {AuthService} from "./auth.service";
+import {HttpHeaders} from "@angular/common/http";
 
 @Injectable({
   providedIn: 'root'
@@ -7,27 +9,41 @@ import * as signalR from '@microsoft/signalr';
 export class SignalRService {
   // @ts-ignore
   private hubConnection: signalR.HubConnection;
+  private token = this.auth.getToken()
 
-  constructor() {
-    this.initializeSignalR();
+  constructor(private auth: AuthService) {
+
   }
 
-  private initializeSignalR() {
+  startConnection(): void {
+    // @ts-ignore
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl('https://your-signalr-api-url')
+      .withUrl('http://26.47.201.227:8001/chat', { accessTokenFactory: () => this.token })
+      .withAutomaticReconnect()
       .build();
 
-    this.hubConnection.start()
-      .then(() => console.log('SignalR connection established.'))
-      .catch(err => console.error('Error while establishing SignalR connection:', err));
+    this.hubConnection
+      .start()
+      .then(() => {
+        console.log('SignalR connection started');
+        // Дополнительные действия после успешного подключения
+      })
+      .catch(err => {
+        console.error('Error while starting SignalR connection:', err);
+      });
   }
 
-  public addChatMessageListener(callback: (message: string) => void) {
-    this.hubConnection.on('ReceiveMessage', callback);
+  stopConnection(): void {
+    this.hubConnection.stop();
   }
 
-  public sendMessage(message: string) {
-    this.hubConnection.invoke('SendMessage', message)
-      .catch(err => console.error('Error while sending message:', err));
+  addChatMessageListener(callback: (message: string) => void): void {
+    this.hubConnection.on('ReceiveMessage', (message: string) => {
+      callback(message);
+    });
+  }
+
+  sendMessage(message: number): void {
+    this.hubConnection.invoke('EnterToChat', message).then(r => console.log(r));
   }
 }

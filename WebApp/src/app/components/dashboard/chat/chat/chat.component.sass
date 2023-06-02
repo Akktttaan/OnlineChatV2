@@ -13,3 +13,84 @@
   flex: 1 1 calc(25% - 10px)
   margin: 5px
   overflow-x: hidden
+
+.chat-area
+  position: relative
+  border: 2px dashed transparent
+  transition: border-color 0.3s
+
+.chat-area.drag-over
+  border-color: #4caf50
+
+.chat-area.drag-over:hover
+  border-color: #2196f3
+
+.chat-area:not(.drag-over):hover
+  border-color: #ffffff
+
+.drag-indicator
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+  color: red
+  font-size: 24px
+  z-index: 2
+
+.blur
+  position: relative
+
+.blur:before
+  content: ''
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background: rgba(0, 0, 0, 0.5)
+  backdrop-filter: blur(8px)
+  z-index: 1
+
+.create-chat-button
+  position: absolute
+  top: 90% /* Измени значение, чтобы правильно позиционировать кнопку */
+  left: 20% /* Измени значение, чтобы правильно позиционировать кнопку */
+  width: 50px
+  height: 50px
+  border-radius: 50%
+  background-color: #1f2eff
+  /* Измени цвет фона на свой */
+  color: #ffffff /* Измени цвет текста на свой */
+  font-size: 24px
+  display: flex
+  align-items: center
+  justify-content: center
+  cursor: pointer
+  transition: background-color 0.3s
+
+  &:hover
+    background-color: #007336
+/* Измени цвет фона при наведении на свой */
+
+.create-chat-button.hide
+  display: none
+
+.dropdown
+  position: absolute
+  top: 80% /* Положение списка под кнопкой */
+  left: 13%
+  background-color: #ffffff
+  border: 1px solid #ccc
+  border-radius: 4px
+  padding: 8px
+  display: flex
+  flex-direction: column
+  z-index: 999
+  font-size: 17px
+
+.dropdown-item
+  padding: 4px
+  cursor: pointer
+
+.dropdown-item:hover
+  background-color: #f2f2f2

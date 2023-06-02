@@ -1,7 +1,8 @@
 import {Component} from '@angular/core';
-import {MatDialogRef} from "@angular/material/dialog";
-import {AuthService} from "../../../shared/services/auth.service";
+import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {AuthService} from "../../../../shared/services/auth.service";
 import {Router} from "@angular/router";
+import {SearchComponent} from "../search/search.component";
 
 @Component({
   selector: 'app-settings',
@@ -11,7 +12,9 @@ import {Router} from "@angular/router";
 export class SettingsComponent {
   constructor(public dialogRef: MatDialogRef<SettingsComponent>,
               private auth: AuthService,
-              private router: Router) {}
+              private router: Router,
+              private dialog: MatDialog) {
+  }
 
   toggleDarkTheme() {
     const isDarkTheme = document.body.classList.contains('dark-mode');
@@ -31,5 +34,13 @@ export class SettingsComponent {
 
   closeDialog() {
     this.dialogRef.close();
+  }
+
+  contacts() {
+      this.dialog.open(SearchComponent, {
+        width: '400px',
+        height: '600px'
+      })
+      this.closeDialog()
   }
 }

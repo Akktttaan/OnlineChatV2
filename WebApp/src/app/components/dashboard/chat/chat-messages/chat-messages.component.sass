@@ -21,27 +21,29 @@
       gap: 10px
 
   .message-container
+    overflow-y: auto
+    flex-grow: 1
     padding-top: 10px
     display: flex
     flex-direction: column
-    height: 100%
 
-  .message
-    display: flex
-    align-items: flex-end
-    margin-bottom: 10px
+    .outgoing
+      display: flex
+      align-items: flex-end
+      margin-bottom: 10px
+      justify-content: flex-end
 
-  .outgoing
-    justify-content: flex-end
+    .incoming
+      display: flex
+      align-items: flex-end
+      margin-bottom: 10px
+      justify-content: flex-start
 
-  .incoming
-    justify-content: flex-start
-
-  .message-content
-    max-width: 60%
-    background-color: #d3d3d3
-    padding: 10px
-    border-radius: 10px
+    .message-content
+      max-width: 60%
+      background-color: #d3d3d3
+      padding: 10px
+      border-radius: 10px
 
   .avatar
     width: 40px
@@ -50,7 +52,7 @@
     margin-right: 10px
     border-radius: 50%
 
-.chat-input
+  .chat-input
     display: flex
     align-items: center
     border: 1px solid black

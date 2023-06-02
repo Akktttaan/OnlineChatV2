@@ -1,0 +1,40 @@
+<section>
+  <div *ngIf="step === 'contactSelection'">
+    <div class="modal-header">
+      <h3>Выберите контакты</h3>
+      <button class="step-button" (click)="changeStep('groupSettings')">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    </div>
+    <div class="custom-search">
+      <div class="search-icon">
+        <i class="material-icons">search</i>
+      </div>
+      <input type="text" class="search-input" placeholder="Поиск">
+    </div>
+    <mat-list>
+      <mat-list-item *ngFor="let contact of contacts">
+        <div class="contact-item">
+          <mat-checkbox></mat-checkbox>
+          <p>{{ contact.name }}</p>
+        </div>
+      </mat-list-item>
+    </mat-list>
+  </div>
+  <div *ngIf="step === 'groupSettings'">
+    <div class="modal-header">
+      <h3>Настройки группы</h3>
+      <button class="step-button" (click)="changeStep('contactSelection')">
+        <mat-icon>keyboard_arrow_left</mat-icon>
+      </button>
+      <button mat-raised-button color="primary" (click)="createGroup()">Создать</button>
+    </div>
+    <mat-form-field>
+      <input matInput placeholder="Название группы">
+    </mat-form-field>
+    <div class="avatar-selection">
+      <h4>Выбор фотографии</h4>
+      <input type="file" accept="image/*" (change)="onFileSelected($event)">
+    </div>
+  </div>
+</section>

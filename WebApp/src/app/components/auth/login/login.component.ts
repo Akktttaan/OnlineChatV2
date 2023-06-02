@@ -25,11 +25,7 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.auth.verifyToken()
-      .pipe(first())
-      .subscribe(
-        () => this.router.navigate(['chat']),
-      )
+
   }
 
   onSubmit() {
@@ -37,7 +33,7 @@ export class LoginComponent implements OnInit {
     // @ts-ignore
     this.auth.login(this.dataForm.getRawValue())
       .subscribe(
-        () => this.router.navigate(['chat']),
+        (res) => this.router.navigate([res.id, 'chat']),
         error => {
           this.wrongLoginOrPassword.next(true)
           this.dataForm.enable();
