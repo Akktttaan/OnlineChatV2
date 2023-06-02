@@ -6,10 +6,12 @@ public interface IChatService
 {
     ChatType GetChatType(long chatId);
     
-    Task<bool> IsUserInChat(long userId);
+    Task<bool> IsUserInChat(long userId, long chatId);
     
     Task<bool> IsChatExist(long chatId);
     Task<CreateChatResult> CreateChat(CreateChatModel model);
 
     Task<ChatModel[]> GetUserChats(long userId);
+
+    Task<ChatHistoryModel[]> GetChat(long userId, long chatId);
 }
