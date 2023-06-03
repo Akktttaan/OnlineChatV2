@@ -19,7 +19,7 @@
   </div>
 
   <div class="message-container" #chatList>
-    <div *ngFor="let message of messages"
+    <div  *ngFor="let message of messages"
                   [ngClass]="{ 'incoming': message.type == 'other', 'outgoing': message.type == 'my' }">
       <div class="avatar" *ngIf="message.type == 'other'">
         <img
@@ -27,24 +27,24 @@
           alt="Аватар другого пользователя" class="avatar">
       </div>
       <div class="message-content">
-        <p>{{message.content}}</p>
+        <p>{{message.messageText}}</p>
       </div>
     </div>
   </div>
 
-  <div class="chat-input">
-    <button mat-icon-button>
+  <form [formGroup]="dataForm" (ngSubmit)="send()" class="chat-input">
+    <button type="button" mat-icon-button>
       <mat-icon>insert_emoticon</mat-icon>
     </button>
 
-    <input placeholder="Введите сообщение"/>
-    <button mat-icon-button>
+    <input formControlName="messageText" placeholder="Введите сообщение"/>
+    <button type="button" mat-icon-button>
       <mat-icon>attach_file</mat-icon>
     </button>
-    <button (click)="send(-3)" mat-icon-button>
+    <button type="submit" mat-icon-button>
       <mat-icon>send</mat-icon>
     </button>
-  </div>
+  </form>
 </div>
 <ng-template #nochat>
   <div class="nochat">

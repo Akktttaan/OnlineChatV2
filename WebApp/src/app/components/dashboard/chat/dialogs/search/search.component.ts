@@ -36,16 +36,11 @@ export class SearchComponent {
     this.api.search(this.dataForm.value.searchText)
       .pipe(first())
       .subscribe(res => {
-        console.log(res)
         this.contacts.next(res)
       })
   }
 
   openChat(user: ContactModel){
     this.dialogRef.close(user)
-  }
-
-  addContact(contactId: number | undefined) {
-
   }
 }

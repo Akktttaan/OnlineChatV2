@@ -73,6 +73,7 @@ export class ChatListComponent implements OnInit, AfterViewInit {
   }
 
   openChat(id: number) {
+    this.signalR.enterToChat(id)
     this.onClickChat.emit(this.chats.find(x => x.id == id))
   }
 }

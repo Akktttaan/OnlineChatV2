@@ -31,7 +31,6 @@ export class GroupCreateComponent implements AfterViewInit{
               private api: OnlineChatClient,
               @Inject(MAT_DIALOG_DATA) public data: any) {
     this.clientId = data.clientId
-    console.log(this.clientId)
   }
   changeStep(step: 'contactSelection' | 'groupSettings') {
     this.step = step;
@@ -71,7 +70,6 @@ export class GroupCreateComponent implements AfterViewInit{
     model.createdById = this.clientId
     model.chatUserIds = this.selectedContacts
     model.chatUserIds.push(parseInt(this.clientId))
-    console.log(model.chatUserIds)
     // @ts-ignore
     this.signalR.createChat(model)
     this.close()

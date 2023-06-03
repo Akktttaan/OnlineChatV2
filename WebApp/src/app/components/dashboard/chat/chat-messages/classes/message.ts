@@ -1,4 +1,9 @@
+import {Sender} from "./sender";
+
 export interface Message {
   type: string;
-  content: string;
+  messageId: number;
+  messageText: string;
+  messageDate: Date;
+  sender: Sender
 }

@@ -23,7 +23,6 @@ export class ChatSettingsComponent {
     const model = new ContactOperationDto()
     model.userId = this.clientId;
     model.contactId = this.chat.id;
-    console.log(model)
     this.api.add(model)
       .pipe(first())
       .subscribe()

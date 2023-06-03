@@ -1,15 +1,18 @@
-import {Component} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Signal} from '@angular/core';
 import {MatDialog} from "@angular/material/dialog";
 import {GroupCreateComponent} from "../dialogs/group-create/group-create.component";
 import {ActivatedRoute} from "@angular/router";
 import {ChatModel} from "../chat-list/interfaces/chat-model";
+import {Subject} from "rxjs";
+import {SignalRService} from "../../../shared/services/signalR.service";
+import {AuthService} from "../../../shared/services/auth.service";
 
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.sass']
 })
-export class ChatComponent {
+export class ChatComponent implements AfterViewInit{
   isDraggingOver: boolean;
   dragCounter: number = 0;
 
@@ -18,10 +21,17 @@ export class ChatComponent {
   clientId: number
 
   currentChat: ChatModel
+  chatChanged = new Subject<boolean>()
 
   constructor(private dialog: MatDialog,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private signalR: SignalRService,
+              private auth: AuthService) {
     this.clientId = this.route.snapshot.params['id']
+  }
+
+  ngAfterViewInit() {
+    this.signalR.start(this.auth.getToken()!);
   }
 
 
@@ -90,5 +100,6 @@ export class ChatComponent {
 
   onClickChat($event: ChatModel) {
     this.currentChat = $event;
+    if($event.lastMessageText == '') this.signalR.chatHistory$.next([])
   }
 }

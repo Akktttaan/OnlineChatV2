@@ -21,7 +21,7 @@
         <p class="chat-details">
           <span
             class="last-message">
-            {{ chat.id < 0 ? !chat.lastMessageFromSender ? chat.lastMessageSenderName + ': ' : '' : ''}}{{ chat.lastMessageText }}
+            {{ chat.id < 0 ? !chat.lastMessageFromSender ? chat.lastMessageSenderName + ': ' : '' : ''}}{{ chat.lastMessageText | slice:0:30 }}
           </span>
           <span class="last-message-time">{{ chat.lastMessageDate | lastMessageTime }}</span>
         </p>

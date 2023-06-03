@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {LoginDto, OnlineChatClient, RegisterDto} from "../../../../api/OnlineChatClient";
 import {first, tap} from "rxjs/operators";
+import {SignalRService} from "./signalR.service";
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,8 @@ export class AuthService {
   private token: string | null | undefined = null;
   private tokenExpiredDate: Date;
 
-  constructor(private api: OnlineChatClient) {
+  constructor(private api: OnlineChatClient,
+              private signalR: SignalRService) {
   }
 
   public login(user: LoginDto) {
@@ -77,5 +79,6 @@ export class AuthService {
   public logout() {
     this.setToken(null);
     localStorage.clear()
+    this.signalR.deleteCashed()
   }
 }

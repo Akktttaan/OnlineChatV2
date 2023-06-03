@@ -1,46 +1,76 @@
-import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {SignalRService} from "../../../shared/services/signalR.service";
 import {Message} from "./classes/message";
 import {ChatModel} from "../chat-list/interfaces/chat-model";
 import {ChatSettingsComponent} from "../dialogs/chat-settings/chat-settings.component";
 import {MatDialog} from "@angular/material/dialog";
 import {ActivatedRoute} from "@angular/router";
+import {filter, Subject} from "rxjs";
+import {NewMessage} from "./classes/new-message";
+import {FormBuilder} from "@angular/forms";
+import {Sender} from "./classes/sender";
 
 @Component({
   selector: 'app-chat-messages',
   templateUrl: './chat-messages.component.html',
   styleUrls: ['./chat-messages.component.sass']
 })
-export class ChatMessagesComponent implements AfterViewInit {
+export class ChatMessagesComponent implements AfterViewInit, OnInit {
   @Input() public chat: ChatModel
-  @ViewChild('chatList') chatListRef: ElementRef;
-  messages: Array<Message> = [
-    {type: 'other', content: 'сам хуй'},
-    {type: 'my', content: 'хуй'},
-
-  ]
+  @Input() public chatChanged: Subject<boolean>
+  @ViewChild("chatList", {static: false}) chatListRef: ElementRef
+  messages: Array<Message> = [];
   clientId: number
+
+  dataForm = this.builder.group({
+    messageText: ['']
+  })
 
   constructor(private signalR: SignalRService,
               private dialog: MatDialog,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private builder: FormBuilder,
+              private renderer: Renderer2) {
     this.clientId = route.snapshot.params['id']
+
   }
 
-  send(number: number) {
-    this.signalR.sendMessage(number)
-
+  ngOnInit() {
+    this.signalR.chatHistory$
+      .subscribe((data: Message[]) => {
+        this.messages = []
+        data.forEach(x => {
+          if (x.sender.userId == this.clientId) {
+            x.type = 'my'
+            this.messages.push(x)
+          } else {
+            x.type = 'other'
+            this.messages.push(x)
+          }
+        })
+        this.scrollToBottom()
+      })
+    this.signalR.newMessages$
+      .subscribe((data: NewMessage) => {
+        if(data.chatId == this.chat.id){
+          data.message.type = 'other'
+          this.messages.push(data.message)
+          this.scrollToBottom()
+        }
+      })
   }
 
   ngAfterViewInit(): void {
-    this.scrollToBottom();
   }
 
   scrollToBottom() {
-    if (this.chatListRef && this.chatListRef.nativeElement) {
-      const chatListElement = this.chatListRef.nativeElement;
-      chatListElement.scrollTop = chatListElement.scrollHeight;
-    }
+    const nativeElement = this.chatListRef.nativeElement
+    setTimeout(() => {
+      nativeElement.scrollTo({
+        top: nativeElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100)
   }
 
   openChatSettings() {
@@ -58,5 +88,21 @@ export class ChatMessagesComponent implements AfterViewInit {
         clientId: this.clientId
       }
     })
+  }
+
+  send() {
+    // @ts-ignore
+    if(!(this.dataForm.value.messageText?.length > 0)) return
+    const message = {
+      messageText: this.dataForm.value.messageText!,
+      messageId: 0,
+      type: 'my',
+      messageDate: new Date(),
+      sender: new Sender(),
+    }
+    this.messages.push(message)
+    this.signalR.send(this.dataForm.value.messageText!, this.chat.id)
+    this.dataForm.reset()
+    this.scrollToBottom()
   }
 }
