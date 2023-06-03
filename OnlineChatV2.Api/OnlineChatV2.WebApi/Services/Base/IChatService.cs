@@ -1,4 +1,5 @@
-﻿using OnlineChatV2.WebApi.Models;
+﻿using OnlineChatV2.Domain;
+using OnlineChatV2.WebApi.Models;
 
 namespace OnlineChatV2.WebApi.Services.Base;
 
@@ -14,4 +15,6 @@ public interface IChatService
     Task<ChatModel[]> GetUserChats(long userId);
 
     Task<ChatHistoryModel[]> GetChat(long userId, long chatId);
+
+    Task<ChatHistoryModel> SaveMessage(User user, MessageDto message);
 }

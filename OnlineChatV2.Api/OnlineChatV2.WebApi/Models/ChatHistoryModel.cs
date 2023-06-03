@@ -2,7 +2,7 @@
 
 public class ChatHistoryModel
 {
-    public ulong MessageId { get; set; }
+    public long MessageId { get; set; }
     public SenderModel Sender { get; set; }
     public string MessageText { get; set; }
     public DateTime MessageDate { get; set; }

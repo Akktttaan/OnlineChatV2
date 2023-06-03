@@ -58,8 +58,10 @@ public class ChatHub : BaseChatHub
     {
         var groupId = await ValidateChatConnect(_chatService, chatId);
         if (groupId == null) return;
-        
-        await Groups.AddToGroupAsync(Context.ConnectionId, _cachedChatIds[chatId]);
+        if (_groupsMembers.ContainsKey(groupId) && _groupsMembers[groupId].Contains(Context.ConnectionId))
+            return;
+        var user = GetUserFromContext(HttpContext);
+        if (user == null) return;
         if (!_groupsMembers.ContainsKey(groupId))
         {
             _groupsMembers[groupId] = new List<string> { Context.ConnectionId };
@@ -68,13 +70,28 @@ public class ChatHub : BaseChatHub
         {
             _groupsMembers[groupId].Add(Context.ConnectionId);
         }
+
+        if (!_cachedChatIds.ContainsKey(chatId))
+        {
+            _cachedChatIds[chatId] = groupId;
+        }
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, _cachedChatIds[chatId]);
+
+        await Clients.Caller.SendAsync("SetChatHistory", await _chatService.GetChat(user.Id, chatId));
     }
 
-    public async Task Send(long chatId)
+    public async Task Send(MessageDto message)
     {
-        var groupId = await ValidateChatConnect(_chatService, chatId);
+        var groupId = await ValidateChatConnect(_chatService, message.ChatId);
         if (groupId == null) return;
+        var user = GetUserFromContext(HttpContext);
 
+        var result = await _chatService.SaveMessage(user, message);
+
+        await Clients.OthersInGroup(groupId).SendAsync("ReceiveMessage",
+            _chatService.GetChatType(message.ChatId) == ChatType.Group ? message.ChatId : user.Id, result);
+        await Clients.Caller.SendAsync("MessageDelivered", result.MessageDate);
         //_eventBus.Invoke(new MessageSend() {From = user.Id, To = chatId, Message = "Test"});
     }
 
@@ -122,7 +139,6 @@ public class ChatHub : BaseChatHub
     {
         var user = GetUserFromContext(HttpContext);
         if (user == null) return null;
-        if (!await service.IsChatExist(chatId)) return null;
         var chatType = service.GetChatType(chatId);
         if (chatType == ChatType.Group && !await service.IsUserInChat(user.Id, chatId)) return null;
 

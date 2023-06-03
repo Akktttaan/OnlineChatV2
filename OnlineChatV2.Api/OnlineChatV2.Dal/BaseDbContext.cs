@@ -23,5 +23,9 @@ public class BaseDbContext : DbContext
     {
         modelBuilder.HasSequence<long>("ChatIds").StartsAt(-1).IncrementsBy(-1);
         modelBuilder.Entity<Chat>().Property(x => x.Id).HasDefaultValueSql("nextval('\"ChatIds\"')");
+        modelBuilder.Entity<ChatUser>()
+            .HasIndex(cu => new { cu.UserId, cu.ChatId })
+            .IsUnique(false)
+            .HasName("IX_ChatUsers_UserId_ChatId");
     }
 }

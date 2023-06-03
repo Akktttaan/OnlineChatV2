@@ -21,7 +21,7 @@ public class SameUserCheckAttribute : ActionFilterAttribute
                 return;
             }
             
-            var user = (User)context.HttpContext.Items["Users"];
+            var user = (User)context.HttpContext.Items["User"];
 
             if (user == null)
             {
@@ -50,12 +50,13 @@ public class SameUserCheckAttribute : ActionFilterAttribute
                 return;
             }
             
-            var user = (User)context.HttpContext.Items["Users"];
+            var user = (User)context.HttpContext.Items["User"];
 
             if (user == null)
             {
                 // Если user не приложен к контексту, возвращаем ошибку 401 Unauthorized
                 context.Result = new StatusCodeResult(401);
+                return;
             }
             
             var userIdFromContext = user.Id;

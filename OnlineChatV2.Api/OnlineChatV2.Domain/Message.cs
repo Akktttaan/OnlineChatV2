@@ -9,9 +9,10 @@ namespace OnlineChatV2.Domain;
 [Index(nameof(FromUserId), Name = "IX_Sender")]
 public class Message
 {
-    [Key]
-    public ulong Id { get; set; }
-    
+
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public long Id { get; set; }
+
     /// <summary>
     /// Из какого чата сообщение - null если сообщение из лички
     /// </summary>

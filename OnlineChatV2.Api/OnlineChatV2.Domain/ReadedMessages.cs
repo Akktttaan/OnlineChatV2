@@ -2,9 +2,9 @@
 
 public class ReadMessage
 {
-    public ulong Id { get; set; }
+    public long Id { get; set; }
     
-    public ulong MessageId { get; set; }
+    public long MessageId { get; set; }
     
     public long ReadById { get; set; }
     public User ReadBy { get; set; }

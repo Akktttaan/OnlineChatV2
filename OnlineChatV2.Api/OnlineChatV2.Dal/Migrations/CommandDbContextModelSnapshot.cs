@@ -65,16 +65,19 @@ namespace OnlineChatV2.Dal.Migrations
 
                     b.HasIndex("ChatId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "ChatId")
+                        .HasDatabaseName("IX_ChatUsers_UserId_ChatId");
 
                     b.ToTable("ChatUsers");
                 });
 
             modelBuilder.Entity("OnlineChatV2.Domain.Message", b =>
                 {
-                    b.Property<decimal>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<long?>("ChatId")
                         .HasColumnType("bigint");
@@ -105,12 +108,14 @@ namespace OnlineChatV2.Dal.Migrations
 
             modelBuilder.Entity("OnlineChatV2.Domain.ReadMessage", b =>
                 {
-                    b.Property<decimal>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("numeric(20,0)");
+                        .HasColumnType("bigint");
 
-                    b.Property<decimal>("MessageId")
-                        .HasColumnType("numeric(20,0)");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("MessageId")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("ReadById")
                         .HasColumnType("bigint");

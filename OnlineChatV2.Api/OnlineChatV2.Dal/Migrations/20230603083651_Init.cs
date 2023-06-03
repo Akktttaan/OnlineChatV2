@@ -16,18 +16,6 @@ namespace OnlineChatV2.Dal.Migrations
                 incrementBy: -1);
 
             migrationBuilder.CreateTable(
-                name: "Chats",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false, defaultValueSql: "nextval('\"ChatIds\"')"),
-                    Name = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Chats", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -57,59 +45,19 @@ namespace OnlineChatV2.Dal.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ChatUsers",
+                name: "Chats",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ChatId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false, defaultValueSql: "nextval('\"ChatIds\"')"),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    OwnerId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChatUsers", x => x.Id);
+                    table.PrimaryKey("PK_Chats", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ChatUsers_Chats_ChatId",
-                        column: x => x.ChatId,
-                        principalTable: "Chats",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ChatUsers_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Messages",
-                columns: table => new
-                {
-                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    ChatId = table.Column<long>(type: "bigint", nullable: false),
-                    ToUserId = table.Column<long>(type: "bigint", nullable: false),
-                    FromUserId = table.Column<long>(type: "bigint", nullable: false),
-                    MessageText = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Messages", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Messages_Chats_ChatId",
-                        column: x => x.ChatId,
-                        principalTable: "Chats",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Messages_Users_FromUserId",
-                        column: x => x.FromUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Messages_Users_ToUserId",
-                        column: x => x.ToUserId,
+                        name: "FK_Chats_Users_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -142,11 +90,97 @@ namespace OnlineChatV2.Dal.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UsersContacts",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ContactOwnerId = table.Column<long>(type: "bigint", nullable: false),
+                    ContactId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UsersContacts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UsersContacts_Users_ContactId",
+                        column: x => x.ContactId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UsersContacts_Users_ContactOwnerId",
+                        column: x => x.ContactOwnerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ChatUsers",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChatId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ChatUsers_Chats_ChatId",
+                        column: x => x.ChatId,
+                        principalTable: "Chats",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChatUsers_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ChatId = table.Column<long>(type: "bigint", nullable: true),
+                    ToUserId = table.Column<long>(type: "bigint", nullable: true),
+                    FromUserId = table.Column<long>(type: "bigint", nullable: false),
+                    MessageText = table.Column<string>(type: "text", nullable: false),
+                    MessageDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Messages_Chats_ChatId",
+                        column: x => x.ChatId,
+                        principalTable: "Chats",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_FromUserId",
+                        column: x => x.FromUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Messages_Users_ToUserId",
+                        column: x => x.ToUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ReadMessages",
                 columns: table => new
                 {
-                    Id = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    MessageId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    MessageId = table.Column<long>(type: "bigint", nullable: false),
                     ReadById = table.Column<long>(type: "bigint", nullable: false),
                     ReadDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -168,6 +202,11 @@ namespace OnlineChatV2.Dal.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Chats_OwnerId",
+                table: "Chats",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ChatUsers_ChatId",
                 table: "ChatUsers",
                 column: "ChatId");
@@ -178,19 +217,19 @@ namespace OnlineChatV2.Dal.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Messages_ChatId",
+                name: "IX_Chats",
                 table: "Messages",
                 column: "ChatId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Messages_FromUserId",
-                table: "Messages",
-                column: "FromUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Messages_ToUserId",
+                name: "IX_PrivateChats",
                 table: "Messages",
                 column: "ToUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sender",
+                table: "Messages",
+                column: "FromUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReadMessages_MessageId",
@@ -211,6 +250,21 @@ namespace OnlineChatV2.Dal.Migrations
                 name: "IX_UserRoles_UserId",
                 table: "UserRoles",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Username",
+                table: "Users",
+                column: "Username");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UsersContacts_ContactId",
+                table: "UsersContacts",
+                column: "ContactId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UsersContacts_ContactOwnerId",
+                table: "UsersContacts",
+                column: "ContactOwnerId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -223,6 +277,9 @@ namespace OnlineChatV2.Dal.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserRoles");
+
+            migrationBuilder.DropTable(
+                name: "UsersContacts");
 
             migrationBuilder.DropTable(
                 name: "Messages");
