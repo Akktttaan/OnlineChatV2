@@ -171,7 +171,7 @@ public class ChatService : IChatService
                     AvatarUrl = string.Empty,
                     Username = x.FromUser.Username
                 }
-            }).ToArrayAsync();
+            }).OrderBy(x => x.MessageDate).ToArrayAsync();
     }
 
     public async Task<ChatHistoryModel> SaveMessage(User user, MessageDto message)
