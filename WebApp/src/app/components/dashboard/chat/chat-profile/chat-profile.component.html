@@ -1,9 +1,8 @@
-<div class="chat-info">
+<div class="chat-info" *ngIf="chat; else nochat">
   <div class="avatar">
-    <img src="https://www.meme-arsenal.com/memes/5f49b6a40df7066a79c002a8605aa613.jpg" alt="Аватар">
   </div>
   <div class="info">
-    <h2>Имя пользователя / Название группы</h2>
+    <h1>{{chat.name}}</h1>
     <p>Дополнительная информация</p>
     <mat-slide-toggle>Отключить уведомления</mat-slide-toggle>
     <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Animi cum distinctio eius enim esse impedit maiores necessitatibus nostrum quam quasi quibusdam repudiandae, saepe sapiente tempora ut veritatis voluptates. Nesciunt, vel?</p>
@@ -27,3 +26,7 @@
     <!-- Добавьте дополнительные вкладки по мере необходимости -->
   </mat-tab-group>
 </div>
+<ng-template #nochat>
+  <div class="nochat">
+  </div>
+</ng-template>

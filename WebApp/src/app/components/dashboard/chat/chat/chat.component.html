@@ -1,6 +1,6 @@
 <div class="chat-container">
   <div class="box" (mouseenter)="changeStateNewChatButton(true)" (mouseleave)="changeStateNewChatButton(false)">
-    <app-chat-list [chatList]=""></app-chat-list>
+    <app-chat-list (onClickChat)="onClickChat($event)"></app-chat-list>
     <button class="create-chat-button" (click)="toggleDropdown()" *ngIf="isHovering">
       <mat-icon *ngIf="!showDropdown">edit</mat-icon>
       <mat-icon *ngIf="showDropdown">close</mat-icon>
@@ -13,9 +13,9 @@
   <div class="box chat-area"
        [class.drag-over]="isDraggingOver" [class.blur]="isDraggingOver" (dragenter)="onFileDragEnter($event)"
        (dragover)="onFileDragOver($event)" (dragleave)="onFileDragLeave($event)" (drop)="onFileDrop($event)">
-    <app-chat-messages></app-chat-messages>
+    <app-chat-messages [chat]="currentChat"></app-chat-messages>
   </div>
   <div class="box">
-    <app-chat-profile></app-chat-profile>
+    <app-chat-profile [chat]="currentChat"></app-chat-profile>
   </div>
 </div>

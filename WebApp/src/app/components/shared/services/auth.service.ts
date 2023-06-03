@@ -7,7 +7,6 @@ import {first, tap} from "rxjs/operators";
 })
 export class AuthService {
   private token: string | null | undefined = null;
-  // @ts-ignore
   private tokenExpiredDate: Date;
 
   constructor(private api: OnlineChatClient) {

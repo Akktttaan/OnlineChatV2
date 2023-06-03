@@ -12,11 +12,7 @@ export class AppComponent implements OnInit {
   constructor(private auth: AuthService,
               private router: Router,
               private signalR: SignalRService) {
-    this.signalR.startConnection();
-    this.signalR.addChatMessageListener((message: string) => {
-      // Обработка нового сообщения
-      console.log('New message:', message);
-    });
+
   }
 
   async ngOnInit(): Promise<void> {
@@ -33,5 +29,11 @@ export class AppComponent implements OnInit {
     } else {
       await this.router.navigate(['login']);
     }
+
+    this.startSignalRService();
+  }
+
+  startSignalRService(){
+    this.signalR.start();
   }
 }

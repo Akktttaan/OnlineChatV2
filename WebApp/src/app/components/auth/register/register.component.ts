@@ -26,7 +26,7 @@ export class RegisterComponent {
     // @ts-ignore
     this.auth.register(new RegisterDto(this.dataForm.getRawValue()))
       .subscribe(
-        () => this.router.navigate(['chat']),
+        (res) => this.router.navigate([res.id, 'chat', 'null']),
         error => {
           console.error(error);
           this.dataForm.enable()

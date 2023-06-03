@@ -1,7 +1,7 @@
-import {Component} from '@angular/core';
-import {MatDialog, MatDialogRef} from "@angular/material/dialog";
+import {Component, Inject} from '@angular/core';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from "@angular/material/dialog";
 import {AuthService} from "../../../../shared/services/auth.service";
-import {Router} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {SearchComponent} from "../search/search.component";
 
 @Component({
@@ -13,7 +13,9 @@ export class SettingsComponent {
   constructor(public dialogRef: MatDialogRef<SettingsComponent>,
               private auth: AuthService,
               private router: Router,
-              private dialog: MatDialog) {
+              private dialog: MatDialog,
+              private route: ActivatedRoute,
+              @Inject(MAT_DIALOG_DATA) public data: any) {
   }
 
   toggleDarkTheme() {
@@ -39,8 +41,14 @@ export class SettingsComponent {
   contacts() {
       this.dialog.open(SearchComponent, {
         width: '400px',
-        height: '600px'
+        height: '600px',
+        data: {
+          clientId: this.data.clientId
+        }
       })
-      this.closeDialog()
+        .afterClosed()
+        .subscribe(contact => {
+          this.dialogRef.close(contact)
+        })
   }
 }
