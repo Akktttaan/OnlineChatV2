@@ -19,6 +19,8 @@ import {MatListModule} from "@angular/material/list";
 import {SearchComponent} from "./dialogs/search/search.component";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import { ChatProfileSettingsComponent } from './dialogs/chat-profile-settings/chat-profile-settings.component';
+import {LastMessageTimePipe} from "../../shared/pipes/last-message-time.pipe";
+import { ChatSettingsComponent } from './dialogs/chat-settings/chat-settings.component';
 
 
 @NgModule({
@@ -30,7 +32,9 @@ import { ChatProfileSettingsComponent } from './dialogs/chat-profile-settings/ch
     SettingsComponent,
     GroupCreateComponent,
     SearchComponent,
-    ChatProfileSettingsComponent
+    ChatProfileSettingsComponent,
+    LastMessageTimePipe,
+    ChatSettingsComponent
   ],
   imports: [
     CommonModule,

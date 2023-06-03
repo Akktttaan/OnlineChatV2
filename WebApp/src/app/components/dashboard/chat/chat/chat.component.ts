@@ -1,6 +1,8 @@
 import {Component} from '@angular/core';
 import {MatDialog} from "@angular/material/dialog";
 import {GroupCreateComponent} from "../dialogs/group-create/group-create.component";
+import {ActivatedRoute} from "@angular/router";
+import {ChatModel} from "../chat-list/interfaces/chat-model";
 
 @Component({
   selector: 'app-chat',
@@ -8,14 +10,18 @@ import {GroupCreateComponent} from "../dialogs/group-create/group-create.compone
   styleUrls: ['./chat.component.sass']
 })
 export class ChatComponent {
-  // @ts-ignore
   isDraggingOver: boolean;
   dragCounter: number = 0;
 
   showDropdown: boolean = false;
   isHovering: boolean = false;
+  clientId: number
 
-  constructor(private dialog: MatDialog) {
+  currentChat: ChatModel
+
+  constructor(private dialog: MatDialog,
+              private route: ActivatedRoute) {
+    this.clientId = this.route.snapshot.params['id']
   }
 
 
@@ -31,17 +37,20 @@ export class ChatComponent {
   }
 
   onFileDragEnter(event: DragEvent): void {
+    if(!this.currentChat) return
     event.preventDefault();
     this.dragCounter++;
     this.isDraggingOver = true;
   }
 
   onFileDragOver(event: DragEvent): void {
+    if(!this.currentChat) return
     event.preventDefault();
     event.stopPropagation();
   }
 
   onFileDragLeave(event: DragEvent): void {
+    if(!this.currentChat) return
     event.preventDefault();
     this.dragCounter--;
     if (this.dragCounter === 0) {
@@ -50,6 +59,7 @@ export class ChatComponent {
   }
 
   onFileDrop(event: DragEvent): void {
+    if(!this.currentChat) return
     event.preventDefault();
     this.dragCounter = 0;
     this.isDraggingOver = false;
@@ -71,7 +81,14 @@ export class ChatComponent {
   createGroup() {
     this.dialog.open(GroupCreateComponent, {
       width: '400px',
-      height: '600px'
+      height: '600px',
+      data: {
+        clientId: this.clientId
+      }
     })
+  }
+
+  onClickChat($event: ChatModel) {
+    this.currentChat = $event;
   }
 }

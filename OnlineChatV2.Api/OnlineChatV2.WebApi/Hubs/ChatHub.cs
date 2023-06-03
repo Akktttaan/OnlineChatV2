@@ -15,32 +15,21 @@ namespace OnlineChatV2.WebApi.Hubs;
 public class ChatHub : BaseChatHub
 {
     private readonly EventBus _eventBus;
-    
-    /// <summary>
-    /// long - chatId, string - имя группы
-    /// </summary>
+    private readonly ConcurrentDictionary<string, List<string>> _chats;
     private readonly ConcurrentDictionary<long, string> _cachedChatIds;
-    
-    /// <summary>
-    /// string - ConnectionId, long - userId
-    /// </summary>
     private readonly ConcurrentDictionary<string, long> _cachedUsers;
-    
-    /// <summary>
-    /// string - имя группы, List<string> - список ConnectionId
-    /// </summary>
-    private readonly ConcurrentDictionary<string, List<string>> _groupsMembers;
     private readonly IChatService _chatService;
 
     public ChatHub([FromServices] EventBus eventBus, [FromServices] IChatService service)
     {
-        _groupsMembers = new();
+        _chats = new();
         _cachedChatIds = new();
         _cachedUsers = new();
         _eventBus = eventBus;
         _chatService = service;
     }
 
+    [Authorize]
     public override async Task OnConnectedAsync()
     {
         var user = GetUserFromContext(HttpContext);
@@ -54,22 +43,16 @@ public class ChatHub : BaseChatHub
         await base.OnConnectedAsync();
     }
 
+    [Authorize]
     public async Task EnterToChat(long chatId)
     {
         var groupId = await ValidateChatConnect(_chatService, chatId);
         if (groupId == null) return;
         
         await Groups.AddToGroupAsync(Context.ConnectionId, _cachedChatIds[chatId]);
-        if (!_groupsMembers.ContainsKey(groupId))
-        {
-            _groupsMembers[groupId] = new List<string> { Context.ConnectionId };
-        }
-        else
-        {
-            _groupsMembers[groupId].Add(Context.ConnectionId);
-        }
     }
 
+    [Authorize]
     public async Task Send(long chatId)
     {
         var groupId = await ValidateChatConnect(_chatService, chatId);
@@ -78,7 +61,7 @@ public class ChatHub : BaseChatHub
         //_eventBus.Invoke(new MessageSend() {From = user.Id, To = chatId, Message = "Test"});
     }
 
-    public async Task CreateChat(CreateChatModel model)
+    public async Task<long> CreateChat(CreateChatModel model)
     {
         var result = await _chatService.CreateChat(model);
         _eventBus.Invoke(new ChatCreated()
@@ -87,15 +70,15 @@ public class ChatHub : BaseChatHub
             ChatName = model.ChatName,
             WhoAdded = result.WhoAdded
         });
-        await Clients.Caller.SendAsync("ChatCreated", result);
+        return result.Id;
     }
 
-    public async Task GetUserChats(long userId)
+    public async Task<ChatModel[]> GetUserChats(long userId)
     {
         var user = GetUserFromContext(HttpContext);
-        if (user == null) return;
-        if (user.Id != userId) return;
-        await Clients.Caller.SendAsync("SetChats", await _chatService.GetUserChats(userId));
+        if (user == null) return null;
+        if (user.Id != userId) return null;
+        return await _chatService.GetUserChats(userId);
     }
     
     public async Task UserWriteEvent()
@@ -108,10 +91,6 @@ public class ChatHub : BaseChatHub
         if (_cachedUsers.ContainsKey(Context.ConnectionId))
         {
             _cachedUsers.TryRemove(Context.ConnectionId, out var id);
-            foreach (var members in _groupsMembers.Values)
-            {
-                members.Remove(Context.ConnectionId);
-            }
             // todo event user offline to bus
         }
         
@@ -124,7 +103,7 @@ public class ChatHub : BaseChatHub
         if (user == null) return null;
         if (!await service.IsChatExist(chatId)) return null;
         var chatType = service.GetChatType(chatId);
-        if (chatType == ChatType.Group && !await service.IsUserInChat(user.Id, chatId)) return null;
+        if (chatType == ChatType.Group && !await service.IsUserInChat(user.Id)) return null;
 
         switch (chatType)
         {

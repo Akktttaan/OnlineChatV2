@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import {Component, Input} from '@angular/core';
+import {ChatModel} from "../chat-list/interfaces/chat-model";
 
 @Component({
   selector: 'app-chat-profile',
@@ -6,5 +7,11 @@ import { Component } from '@angular/core';
   styleUrls: ['./chat-profile.component.sass']
 })
 export class ChatProfileComponent {
+  @Input() public chat: ChatModel
+
+  constructor() {
+
+  }
+
 
 }

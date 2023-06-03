@@ -33,7 +33,7 @@ export class LoginComponent implements OnInit {
     // @ts-ignore
     this.auth.login(this.dataForm.getRawValue())
       .subscribe(
-        (res) => this.router.navigate([res.id, 'chat']),
+        (res) => this.router.navigate([res.id, 'chat', 'null']),
         error => {
           this.wrongLoginOrPassword.next(true)
           this.dataForm.enable();

@@ -1,6 +1,6 @@
-<div class="chat-container">
+<div class="chat-container" *ngIf="chat; else nochat">
   <div class="chat-header">
-    <h2>Название чата</h2>
+    <h2>{{chat.name}}</h2>
     <div class="chat-header-buttons">
       <button mat-icon-button>
         <mat-icon>search</mat-icon>
@@ -10,6 +10,9 @@
       </button>
       <button mat-icon-button>
         <mat-icon>videocam</mat-icon>
+      </button>
+      <button mat-icon-button (click)="openChatSettings()">
+        <mat-icon>menu</mat-icon>
       </button>
       <!-- Добавьте другие кнопки по мере необходимости -->
     </div>
@@ -43,3 +46,9 @@
     </button>
   </div>
 </div>
+<ng-template #nochat>
+  <div class="nochat">
+    <h1>Выберите чат</h1>
+  </div>
+</ng-template>
+

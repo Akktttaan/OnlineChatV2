@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
-import {MatDialogRef} from "@angular/material/dialog";
-import {ContactModel, OnlineChatClient} from "../../../../../../api/OnlineChatClient";
+import {Component, Inject} from '@angular/core';
+import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {ContactModel, ContactOperationDto, OnlineChatClient} from "../../../../../../api/OnlineChatClient";
 import {Observable, ReplaySubject} from "rxjs";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {first} from "rxjs/operators";
 import {FormBuilder, ɵElement, ɵValue} from "@angular/forms";
 
@@ -12,7 +12,6 @@ import {FormBuilder, ɵElement, ɵValue} from "@angular/forms";
   styleUrls: ['./search.component.sass']
 })
 export class SearchComponent {
-  // @ts-ignore
   contacts = new ReplaySubject<ContactModel[]>(1);
   clientId: number;
   dataForm = this.builder.group({
@@ -21,8 +20,10 @@ export class SearchComponent {
   constructor(private dialogRef: MatDialogRef<SearchComponent>,
               private api: OnlineChatClient,
               private route: ActivatedRoute,
-              private builder: FormBuilder) {
-    this.clientId = this.route.snapshot.params['clientId'];
+              private router: Router,
+              private builder: FormBuilder,
+              @Inject(MAT_DIALOG_DATA) public data: any) {
+    this.clientId = data.clientId
     this.api.all2(this.clientId)
       .pipe(first())
       .subscribe(res => {
@@ -40,7 +41,11 @@ export class SearchComponent {
       })
   }
 
-  close(){
-    this.dialogRef.close()
+  openChat(user: ContactModel){
+    this.dialogRef.close(user)
+  }
+
+  addContact(contactId: number | undefined) {
+
   }
 }
