@@ -100,6 +100,6 @@ export class ChatComponent implements AfterViewInit{
 
   onClickChat($event: ChatModel) {
     this.currentChat = $event;
-    if($event.lastMessageText == '') this.signalR.chatHistory$.next([])
+    this.signalR.enterToChat($event.id)
   }
 }

@@ -2,17 +2,13 @@
   <form [formGroup]="dataForm" (ngSubmit)="search()">
     <div class="custom-search">
       <div class="search-icon">
-        <i class="material-icons" >search</i>
+        <i class="material-icons">search</i>
       </div>
       <input formControlName="searchText" type="text" class="search-input" placeholder="Поиск">
     </div>
-    <mat-list>
-      <mat-list-item *ngFor="let item of contacts | async" (click)="openChat(item)">
-        <div class="contact-item">
-          <img src="{{item.photoUrl}}" alt="">
-          {{item.username}}
-        </div>
-      </mat-list-item>
-    </mat-list>
+    <div class="contact-item" *ngFor="let item of contacts | async" (click)="openChat(item)">
+      <img src="{{item.photoUrl}}" alt="">
+      {{item.username}}
+    </div>
   </form>
 </section>

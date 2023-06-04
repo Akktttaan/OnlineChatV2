@@ -4,5 +4,5 @@ export interface ChatModel{
   lastMessageFromSender: boolean;
   lastMessageSenderName: string;
   lastMessageText: string;
-  lastMessageDate: Date;
+  lastMessageDate: Date | string;
 }

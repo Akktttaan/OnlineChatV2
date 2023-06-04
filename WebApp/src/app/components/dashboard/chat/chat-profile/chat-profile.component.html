@@ -8,17 +8,17 @@
     <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Animi cum distinctio eius enim esse impedit maiores necessitatibus nostrum quam quasi quibusdam repudiandae, saepe sapiente tempora ut veritatis voluptates. Nesciunt, vel?</p>
   </div>
   <mat-tab-group>
+    <mat-tab label="Members" *ngIf="chat.id < 0">
+      <div class="contact-item" *ngFor="let item of chatInfo?.members">
+        <img src="{{item.avatarUrl}}" alt="">
+        {{item.userName}} <p *ngIf="chatInfo.ownerId == item.userId" style="color: blue; margin-left: 5px;">владелец</p>
+      </div>
+    </mat-tab>
     <mat-tab label="Media">
       <!-- Содержимое вкладки Shared Media -->
     </mat-tab>
     <mat-tab label="Files">
       <!-- Содержимое вкладки Files -->
-    </mat-tab>
-    <mat-tab label="Audio">
-      <!-- Содержимое вкладки Audio -->
-    </mat-tab>
-    <mat-tab label="Video">
-      <!-- Содержимое вкладки Video -->
     </mat-tab>
     <mat-tab label="Links">
       <!-- Содержимое вкладки Links -->

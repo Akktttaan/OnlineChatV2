@@ -18,9 +18,10 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatListModule} from "@angular/material/list";
 import {SearchComponent} from "./dialogs/search/search.component";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import { ChatProfileSettingsComponent } from './dialogs/chat-profile-settings/chat-profile-settings.component';
+import {ChatProfileSettingsComponent} from './dialogs/chat-profile-settings/chat-profile-settings.component';
 import {LastMessageTimePipe} from "../../shared/pipes/last-message-time.pipe";
-import { ChatSettingsComponent } from './dialogs/chat-settings/chat-settings.component';
+import {ChatSettingsComponent} from './dialogs/chat-settings/chat-settings.component';
+import {PickerComponent} from '@ctrl/ngx-emoji-mart';
 
 
 @NgModule({
@@ -50,7 +51,8 @@ import { ChatSettingsComponent } from './dialogs/chat-settings/chat-settings.com
     MatListModule,
     NgOptimizedImage,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    PickerComponent
   ]
 })
 export class ChatModule {

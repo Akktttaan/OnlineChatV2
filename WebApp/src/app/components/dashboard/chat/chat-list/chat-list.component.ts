@@ -43,7 +43,7 @@ export class ChatListComponent implements OnInit, AfterViewInit {
     })
       .afterClosed()
       .subscribe(data => {
-        if(data instanceof ContactModel){
+        if (data instanceof ContactModel) {
           this.onClickChat.emit({
             id: data.userId!,
             name: data.username!,
@@ -69,6 +69,35 @@ export class ChatListComponent implements OnInit, AfterViewInit {
       .subscribe((res) => {
         this.chats = res
         console.log("чаты", res);
+        // if (this.chats.length > 0) {
+        //   this.openChat(this.chats[0].id)
+        // }
+      })
+
+    this.signalR.pushNotifyMessages$
+      .subscribe(res => {
+        const chat = this.chats.find(x => x.id == res.chatId)
+        if (chat) {
+          const index = this.chats.indexOf(chat);
+          this.chats.splice(index, 1)
+          chat.lastMessageText = res.messageText;
+          chat.lastMessageSenderName = res.sender.username;
+          chat.lastMessageDate = res.messageDate;
+          chat.lastMessageFromSender = parseInt(this.clientId) == res.sender.userId
+          this.chats.unshift(chat)
+        } else {
+          this.chats.unshift({
+            id: res.chatId,
+            name: res.sender.userId != parseInt(this.clientId) ?
+              res.chatId < 0 ?
+                res.chatName : res.sender.username
+              : res.chatName,
+            lastMessageFromSender: false,
+            lastMessageSenderName: res.sender.username,
+            lastMessageText: res.messageText,
+            lastMessageDate: res.messageDate
+          })
+        }
       })
   }
 

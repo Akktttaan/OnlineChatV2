@@ -31,6 +31,8 @@ export class AppComponent implements OnInit {
     }
 
     this.startSignalRService();
+
+
   }
 
   startSignalRService(){

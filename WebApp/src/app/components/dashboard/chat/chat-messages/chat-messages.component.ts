@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {SignalRService} from "../../../shared/services/signalR.service";
 import {Message} from "./classes/message";
 import {ChatModel} from "../chat-list/interfaces/chat-model";
@@ -6,8 +6,8 @@ import {ChatSettingsComponent} from "../dialogs/chat-settings/chat-settings.comp
 import {MatDialog} from "@angular/material/dialog";
 import {ActivatedRoute} from "@angular/router";
 import {filter, Subject} from "rxjs";
-import {NewMessage} from "./classes/new-message";
 import {FormBuilder} from "@angular/forms";
+import {NewMessage} from "./classes/new-message";
 import {Sender} from "./classes/sender";
 
 @Component({
@@ -25,6 +25,7 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
   dataForm = this.builder.group({
     messageText: ['']
   })
+  showEmoji: any;
 
   constructor(private signalR: SignalRService,
               private dialog: MatDialog,
@@ -37,6 +38,9 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
 
   ngOnInit() {
     this.signalR.chatHistory$
+      .pipe(
+        filter(x => !!x)
+      )
       .subscribe((data: Message[]) => {
         this.messages = []
         data.forEach(x => {
@@ -52,10 +56,10 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
       })
     this.signalR.newMessages$
       .subscribe((data: NewMessage) => {
-        if(data.chatId == this.chat.id){
+        if (data.chatId == this.chat.id) {
           data.message.type = 'other'
           this.messages.push(data.message)
-          this.scrollToBottom()
+          this.scrollToBottom('smooth')
         }
       })
   }
@@ -63,14 +67,14 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
   ngAfterViewInit(): void {
   }
 
-  scrollToBottom() {
+  scrollToBottom(behavior: ScrollBehavior = 'auto') {
     const nativeElement = this.chatListRef.nativeElement
     setTimeout(() => {
       nativeElement.scrollTo({
         top: nativeElement.scrollHeight,
-        behavior: 'smooth'
+        behavior: behavior
       });
-    }, 100)
+    }, 1)
   }
 
   openChatSettings() {
@@ -92,7 +96,7 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
 
   send() {
     // @ts-ignore
-    if(!(this.dataForm.value.messageText?.length > 0)) return
+    if (!(this.dataForm.value.messageText?.length > 0)) return
     const message = {
       messageText: this.dataForm.value.messageText!,
       messageId: 0,
@@ -101,8 +105,24 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
       sender: new Sender(),
     }
     this.messages.push(message)
-    this.signalR.send(this.dataForm.value.messageText!, this.chat.id)
+    this.signalR.send(this.dataForm.value.messageText!, this.chat.id, this.chat.name)
     this.dataForm.reset()
-    this.scrollToBottom()
+    this.scrollToBottom('smooth')
+  }
+
+  onEmojiSelectBtn($event: any) {
+    if (this.dataForm.value.messageText) {
+      this.dataForm.controls.messageText.setValue(this.dataForm.value.messageText + $event.emoji.native)
+    } else {
+      this.dataForm.controls.messageText.setValue($event.emoji.native)
+    }
+  }
+
+  hideEmojiPicker() {
+    setTimeout(() => {
+      if (this.showEmoji) {
+        this.showEmoji = false;
+      }
+    }, 200);
   }
 }

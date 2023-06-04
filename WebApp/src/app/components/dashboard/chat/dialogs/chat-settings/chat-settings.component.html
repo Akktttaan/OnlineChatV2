@@ -1,5 +1,5 @@
 <div>
   <mat-dialog-content>
-    <button mat-button (click)="addContact()">Добавить в контакты</button>
+    <button *ngIf="chat.id > 0" mat-button (click)="addContact()">Добавить в контакты</button>
   </mat-dialog-content>
 </div>

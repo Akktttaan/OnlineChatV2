@@ -4,13 +4,9 @@ import {Pipe} from "@angular/core";
   name: 'lastMessageTime'
 })
 export class LastMessageTimePipe {
-  transform(value: any): string {
-    if (typeof value !== 'string' || !value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)) {
-      return ''; // или другое значение по умолчанию в случае некорректного значения
-    }
-
-    const date = new Date(value);
-    const currentDate = new Date();
+  transform(value: string | Date): string {
+    const date = value instanceof Date ? value : new Date(value);
+    const currentDate = new Date((new Date()).getDate() - 24 * 60 * 60 * 1000);
     const lastWeekDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     if (date >= currentDate) {
