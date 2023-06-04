@@ -65,7 +65,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(AuthenticateResponse),200)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        var response = await _authService.Register(dto.Username, dto.Password, dto.Email);
+        var response = await _authService.Register(dto);
         if (response == null)
         {
             return BadRequest("Данный email или username уже используется");

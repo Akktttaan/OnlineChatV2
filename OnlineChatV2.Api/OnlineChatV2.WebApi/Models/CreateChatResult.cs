@@ -4,4 +4,5 @@ public class CreateChatResult
 {
     public long Id { get; set; }
     public IEnumerable<long> WhoAdded { get; set; }
+    public string Description { get; set; }
 }

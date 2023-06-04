@@ -13,6 +13,7 @@ public class BaseDbContext : DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<ReadMessage> ReadMessages { get; set; }
     public DbSet<UserContact> UsersContacts { get; set; }
+    public DbSet<NicknameColor> NicknameColors { get; set; }
 
     public BaseDbContext(DbContextOptions options) : base(options)
     {

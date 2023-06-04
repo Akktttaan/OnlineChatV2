@@ -34,18 +34,21 @@ public class UserService : IUserService
             : new AuthenticateResponse(user, GenerateJwt(user));
     }
     
-    public async Task<AuthenticateResponse?> Register(string username, string password, string email)
+    public async Task<AuthenticateResponse?> Register(RegisterDto dto)
     {
         var users = _commandDb.Users;
-        var exist = await users.FirstOrDefaultAsync(x => x.Username == username || x.Email == email);
+        var exist = await users.FirstOrDefaultAsync(x => x.Username == dto.Username || x.Email == dto.Email);
         if (exist != null)
             return await Task.FromResult<AuthenticateResponse>(null);
-        var hash = CryptoUtilities.GetMd5String(password);
+        var hash = CryptoUtilities.GetMd5String(dto.Password);
+        var color = _queryDb.NicknameColors.OrderBy(x => Guid.NewGuid()).Take(1).First();
         var user = new User()
         {
             Password = hash,
-            Email = email,
-            Username = username
+            Email = dto.Email,
+            Username = dto.Password,
+            NicknameColor = color.Hex,
+            About = dto.About
         };
         await users.AddAsync(user);
         await _commandDb.SaveChangesAsync();
@@ -73,7 +76,9 @@ public class UserService : IUserService
 
     public async Task<User?> GetUserById(long id)
     {
-        return await _queryDb.Users.Include(x => x.UserRoles).FirstOrDefaultAsync(x => x.Id == id);
+        return await _queryDb.Users
+            .Include(x => x.UserRoles)
+            .FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task PromoteToAdmin(long id)
@@ -89,7 +94,10 @@ public class UserService : IUserService
 
     public async Task<UserViewModel[]> GetAllUsers()
     {
-        return await Task.Run(() => _queryDb.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role).Select(x =>
+        return await Task.Run(() => _queryDb.Users
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .Select(x =>
             new UserViewModel()
             {
                 Username = x.Username,
@@ -100,4 +108,28 @@ public class UserService : IUserService
             }).ToArray());
     }
 
+    public async Task<DateTime> UpdateLastSeenTime(long userId)
+    {
+        var user = await _commandDb.Users.FindAsync(userId);
+        if (user == null)
+            return new DateTime();
+        user.WasOnline = DateTime.UtcNow;
+        _commandDb.Users.Update(user);
+        await _commandDb.SaveChangesAsync();
+        return user.WasOnline;
+    }
+
+    public async Task<UserInfo> GetUserInfo(long userId)
+    {
+        var user = await _queryDb.Users.FirstOrError<User, ArgumentException>(x => x.Id == userId,
+            "Пользователь не найден");
+        return new UserInfo()
+        {
+            Id = user.Id,
+            Username = user.Username,
+            About = user.About,
+            LastSeen = user.WasOnline,
+            AvatarUrl = "" // todo avatars
+        };
+    }
 }

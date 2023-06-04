@@ -35,6 +35,41 @@ public static class SeedData
             });
         }
 
+        if (!context.NicknameColors.Any())
+        {
+            context.NicknameColors.AddRange(new []
+            {
+                new NicknameColor()
+                {
+                    Hex = "#8B0000"
+                },
+                new NicknameColor()
+                {
+                    Hex = "#FF4500"
+                },
+                new NicknameColor()
+                {
+                    Hex = "#8B8B00"
+                },
+                new NicknameColor()
+                {
+                    Hex = "#006400"
+                },
+                new NicknameColor()
+                {
+                    Hex = "#008B8B"
+                },
+                new NicknameColor()
+                {
+                    Hex = "#00008B"
+                },
+                new NicknameColor()
+                {
+                    Hex = "#8B008B"
+                }
+            });
+        }
+
         context.SaveChanges();
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OnlineChatV2.Dal;
@@ -11,9 +12,10 @@ using OnlineChatV2.Dal;
 namespace OnlineChatV2.Dal.Migrations
 {
     [DbContext(typeof(CommandDbContext))]
-    partial class CommandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230604094447_NicknameColors")]
+    partial class NicknameColors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,10 +34,6 @@ namespace OnlineChatV2.Dal.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasDefaultValueSql("nextval('\"ChatIds\"')");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -96,9 +94,6 @@ namespace OnlineChatV2.Dal.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("MessageTypeId")
-                        .HasColumnType("integer");
-
                     b.Property<long?>("ToUserId")
                         .HasColumnType("bigint");
 
@@ -111,23 +106,6 @@ namespace OnlineChatV2.Dal.Migrations
                     b.HasIndex(new[] { "FromUserId" }, "IX_Sender");
 
                     b.ToTable("Messages");
-                });
-
-            modelBuilder.Entity("OnlineChatV2.Domain.NicknameColor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Hex")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NicknameColors");
                 });
 
             modelBuilder.Entity("OnlineChatV2.Domain.ReadMessage", b =>
@@ -184,15 +162,7 @@ namespace OnlineChatV2.Dal.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("About")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("NicknameColor")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -203,9 +173,6 @@ namespace OnlineChatV2.Dal.Migrations
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("WasOnline")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

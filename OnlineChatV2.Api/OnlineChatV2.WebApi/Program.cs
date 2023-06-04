@@ -23,8 +23,15 @@ builder.Services
     .AddSingleton<EventBus>()
     .AddTransient<IChatService, ChatService>()
     .AddScoped<IContactsService, ContactsService>()
+    .AddSingleton<IChatHubStore, ChatHubStore>()
     .AddCorsPolicy()
-    .AddSignalR(opt => opt.AddFilter<AuthHubFilter>());
+    .AddSignalR(opt => opt.AddFilter<AuthHubFilter>())
+    .AddHubOptions<ChatHub>(options =>
+    {
+        options.AddFilter<AuthHubFilter>();
+    })
+;
+
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -38,6 +45,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<JwtMiddleware>();
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 

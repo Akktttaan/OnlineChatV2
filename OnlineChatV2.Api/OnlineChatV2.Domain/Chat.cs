@@ -11,4 +11,5 @@ public class Chat
     public ICollection<Message> Messages { get; set; }
     public long OwnerId { get; set; }
     public User Owner { get; set; }
+    public string Description { get; set; }
 }

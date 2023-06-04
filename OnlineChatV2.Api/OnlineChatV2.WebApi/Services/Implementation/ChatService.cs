@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OnlineChatV2.Dal;
 using OnlineChatV2.Domain;
+using OnlineChatV2.Domain.Enums;
 using OnlineChatV2.WebApi.Models;
 using OnlineChatV2.WebApi.Services.Base;
+using OnlineChatV2.WebApi.Utilities;
 
 namespace OnlineChatV2.WebApi.Services.Implementation;
 
@@ -44,7 +46,8 @@ public class ChatService : IChatService
         var chat = new Chat
         {
             Name = model.ChatName,
-            OwnerId = model.CreatedById
+            OwnerId = model.CreatedById,
+            Description = model.ChatName
         };
         await _commandDb.AddAsync(chat);
         await _commandDb.SaveChangesAsync();
@@ -68,7 +71,8 @@ public class ChatService : IChatService
         return new CreateChatResult
         {
             Id = chat.Id,
-            WhoAdded = chatUsers.Select(x => x.UserId)
+            WhoAdded = chatUsers.Select(x => x.UserId),
+            Description = model.Description
         };
     }
 
@@ -126,7 +130,8 @@ public class ChatService : IChatService
             };
 
         return await chatsWithLastMessage.Union(pmsWithLastMessages)
-            .OrderByDescending(x => x.LastMessageDate)
+            .OrderByDescending(x => x.LastMessageDate.HasValue)
+            .ThenByDescending(x => x.LastMessageDate)
             .Where(x => x.Id != null)
             .ToArrayAsync();
     }
@@ -169,26 +174,31 @@ public class ChatService : IChatService
                 {
                     UserId = x.FromUserId,
                     AvatarUrl = string.Empty,
-                    Username = x.FromUser.Username
+                    Username = x.FromUser.Username,
+                    NicknameColor = x.FromUser.NicknameColor
                 }
             }).OrderBy(x => x.MessageDate).ToArrayAsync();
     }
 
-    public async Task<ChatHistoryModel> SaveMessage(User user, MessageDto message)
+    public async Task<ChatHistoryModel> SaveMessage(User user, MessageDto message, MessageType type = MessageType.Common)
     {
         var entry = new Message()
         {
             FromUserId = user.Id,
-            MessageDate = DateTime.Now,
-            MessageText = message.MessageText
+            MessageDate = DateTime.Now.ToUniversalTime(),
+            MessageText = message.MessageText,
+            MessageType = type
         };
+        string? chatName;
         if (GetChatType(message.ChatId) == ChatType.Personal)
         {
             entry.ToUserId = message.ChatId;
+            chatName = (await _commandDb.Users.FindAsync(message.ChatId))?.Username;
         }
         else
         {
             entry.ChatId = message.ChatId;
+            chatName = (await _commandDb.Chats.FindAsync(message.ChatId))?.Name;
         }
 
         await _commandDb.AddAsync(entry);
@@ -198,13 +208,60 @@ public class ChatService : IChatService
             MessageText = entry.MessageText,
             MessageDate = entry.MessageDate,
             MessageId = entry.Id,
+            ChatName = chatName,
+            MessageType = entry.MessageType,
             Sender = new SenderModel()
             {
                 AvatarUrl = "",
                 UserId = user.Id,
-                Username = user.Username
+                Username = user.Username,
+                NicknameColor = user.NicknameColor
             }
         };
     }
+
+    public async Task<ChatInfo> GetChatInfo(long chatId)
+    {
+        var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId, $"Чат с id {chatId} не найден!");
+        var chatUsers = await _queryDb.ChatUsers
+            .Where(x => x.ChatId == chatId)
+            .Include(x => x.User).Select(x =>
+            new ChatMember()
+            {
+                UserId = x.UserId,
+                UserName = x.User.Username,
+                AvatarUrl = "" // todo avatars
+            }).ToArrayAsync();
+        return new ChatInfo()
+        {
+            ChatId = chat.Id,
+            ChatName = chat.Name,
+            Members = chatUsers,
+            OwnerId = chat.OwnerId,
+            ChatDescription = chat.Description
+        };
+    }
+
+    public async Task AddUserToChat(long chatId, long userId)
+    {
+        var chatUser = await _commandDb.ChatUsers.FirstOrDefaultAsync(x => x.UserId == userId && x.ChatId == chatId);
+        if (chatUser != null)
+            return;
+        var entry = new ChatUser()
+        {
+            ChatId = chatId,
+            UserId = userId
+        };
+        await _commandDb.AddAsync(entry);
+        await _commandDb.SaveChangesAsync();
+    }
     
+    public async Task RemoveUserFromChat(long chatId, long userId)
+    {
+        var chatUser = await _commandDb.ChatUsers.FirstOrDefaultAsync(x => x.UserId == userId && x.ChatId == chatId);
+        if (chatUser == null)
+            return;
+        _commandDb.Remove(chatUser);
+        await _commandDb.SaveChangesAsync();
+    }
  }

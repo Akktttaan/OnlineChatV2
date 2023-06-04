@@ -47,4 +47,18 @@ public class User
     /// </summary>
     public ICollection<Chat> ChatsOwner { get; set; }
     
+    /// <summary>
+    /// Цвет ника
+    /// </summary>
+    public string NicknameColor { get; set; }
+    
+    /// <summary>
+    /// Последний раз был в сети
+    /// </summary>
+    public DateTime WasOnline { get; set; }
+    
+    /// <summary>
+    /// О себе
+    /// </summary>
+    public string About { get; set; }
 }

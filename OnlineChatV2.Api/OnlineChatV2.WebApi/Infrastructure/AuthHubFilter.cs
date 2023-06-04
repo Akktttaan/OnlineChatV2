@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Authentication;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
@@ -16,21 +17,20 @@ public class AuthHubFilter : IHubFilter
         _userService = userService;
         _configuration = configuration;
     }
-    
+
+    public async Task OnConnectedAsync(HubLifetimeContext context, Func<HubLifetimeContext, Task> next)
+    {
+        await TokenHandling(context.Context);
+        await next(context);
+    }
+        
     public async ValueTask<object?> InvokeMethodAsync(
         HubInvocationContext invocationContext, 
         Func<HubInvocationContext, ValueTask<object?>> next)
     {
-        var context = invocationContext.Hub.Context.GetHttpContext();
         try
         {
-            if(context == null)
-                return await next(invocationContext);   
-            
-            var accessToken = context.Request.Query["access_token"];
-            if (!string.IsNullOrEmpty(accessToken))
-                await AttachUserToContext(context, _userService, accessToken);
-
+            await TokenHandling(invocationContext.Context);
             return await next(invocationContext);   
         }
         catch (Exception ex)
@@ -39,11 +39,19 @@ public class AuthHubFilter : IHubFilter
             throw;
         }
     }
+
+    private async Task TokenHandling(HubCallerContext context)
+    {
+        var httpContext = context.GetHttpContext();
+        var accessToken = httpContext.Request.Query["access_token"];
+        if (!string.IsNullOrEmpty(accessToken))
+            await AttachUserToContext(httpContext, _userService, accessToken);
+        else
+            throw new AuthenticationException("Unauhorized");
+    }
     
     private async Task AttachUserToContext(HttpContext context, IUserService authService, string token)
-    {
-        try
-        {
+    { 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["SecretKey"]);
 
@@ -59,8 +67,9 @@ public class AuthHubFilter : IHubFilter
             var jwt = (JwtSecurityToken)validatedToken;
             var userId = int.Parse(jwt.Claims.First(x => x.Type == "id").Value);
 
-            context.Items["User"] = await authService.GetUserById(userId);
+            var user = await authService.GetUserById(userId);
+            if (user == null)
+                throw new AuthenticationException("Unauthorized");
+            context.Items["User"] = user;
         }
-        catch {}
-    }
 }

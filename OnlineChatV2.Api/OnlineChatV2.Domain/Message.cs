@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
+using OnlineChatV2.Domain.Enums;
 
 namespace OnlineChatV2.Domain;
 
@@ -48,4 +49,17 @@ public class Message
     /// </summary>
     public DateTime MessageDate { get; set; }
     //todo все остальное
+
+    /// <summary>
+    /// Тип сообщения (на основе enum Message Type)
+    /// </summary>
+    public int MessageTypeId { get; set; }
+
+    [EnumDataType(typeof(MessageType))]
+    [NotMapped]
+    public MessageType MessageType
+    {
+        get => (MessageType)MessageTypeId;
+        set => MessageTypeId = (int)value;
+    }
 }

@@ -7,7 +7,7 @@ public interface IUserService
 {
     Task<AuthenticateResponse?> Auth(string nameOrEmail, string password);
 
-    Task<AuthenticateResponse?> Register(string username, string password, string email);
+    Task<AuthenticateResponse?> Register(RegisterDto dto);
 
     string GenerateJwt(User user);
 
@@ -16,4 +16,8 @@ public interface IUserService
     Task PromoteToAdmin(long id);
 
     Task<UserViewModel[]> GetAllUsers();
+
+    Task<DateTime> UpdateLastSeenTime(long userId);
+
+    Task<UserInfo> GetUserInfo(long userId);
 }
