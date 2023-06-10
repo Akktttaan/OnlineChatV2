@@ -7,4 +7,5 @@ public class UserInfo
     public string About { get; set; }
     public DateTime LastSeen { get; set; }
     public string AvatarUrl { get; set; }
+    public IEnumerable<string> Avatars { get; set; }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OnlineChatV2.Dal;
@@ -11,9 +12,10 @@ using OnlineChatV2.Dal;
 namespace OnlineChatV2.Dal.Migrations
 {
     [DbContext(typeof(CommandDbContext))]
-    partial class CommandDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230610100505_UserAvatars")]
+    partial class UserAvatars
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,10 +35,6 @@ namespace OnlineChatV2.Dal.Migrations
                         .HasColumnType("bigint")
                         .HasDefaultValueSql("nextval('\"ChatIds\"')");
 
-                    b.Property<string>("CurrentAvatar")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -53,28 +51,6 @@ namespace OnlineChatV2.Dal.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Chats");
-                });
-
-            modelBuilder.Entity("OnlineChatV2.Domain.ChatAvatar", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("AvatarUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("ChatId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChatId");
-
-                    b.ToTable("ChatAvatars");
                 });
 
             modelBuilder.Entity("OnlineChatV2.Domain.ChatUser", b =>
@@ -323,17 +299,6 @@ namespace OnlineChatV2.Dal.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("OnlineChatV2.Domain.ChatAvatar", b =>
-                {
-                    b.HasOne("OnlineChatV2.Domain.Chat", "Chat")
-                        .WithMany("Avatars")
-                        .HasForeignKey("ChatId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Chat");
-                });
-
             modelBuilder.Entity("OnlineChatV2.Domain.ChatUser", b =>
                 {
                     b.HasOne("OnlineChatV2.Domain.Chat", "Chat")
@@ -444,8 +409,6 @@ namespace OnlineChatV2.Dal.Migrations
 
             modelBuilder.Entity("OnlineChatV2.Domain.Chat", b =>
                 {
-                    b.Navigation("Avatars");
-
                     b.Navigation("ChatUsers");
 
                     b.Navigation("Messages");

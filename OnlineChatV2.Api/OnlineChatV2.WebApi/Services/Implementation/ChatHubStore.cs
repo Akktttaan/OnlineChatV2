@@ -128,4 +128,7 @@ public class ChatHubStore : IChatHubStore
     }
 
     public IEnumerable<string> GetGroups() => _groups.Keys;
+    public IEnumerable<long> GetOnlineUsers() => _cachedUsers.Values;
+    public IEnumerable<string> GetOnlineClients() => _cachedUsers.Keys;
+
 }

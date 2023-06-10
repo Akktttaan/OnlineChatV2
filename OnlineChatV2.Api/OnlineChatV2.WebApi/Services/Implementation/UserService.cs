@@ -7,6 +7,7 @@ using OnlineChatV2.WebApi.Utilities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace OnlineChatV2.WebApi.Services.Implementation;
@@ -16,12 +17,16 @@ public class UserService : IUserService
     private readonly QueryDbContext _queryDb;
     private readonly CommandDbContext _commandDb;
     private readonly IConfiguration _configuration;
+    private readonly IFileService _fileService;
 
-    public UserService(QueryDbContext queryDb, CommandDbContext commandDb, IConfiguration configuration)
+    public UserService(QueryDbContext queryDb, CommandDbContext commandDb, 
+        IConfiguration configuration,
+        IFileService fileService)
     {
         _queryDb = queryDb;
         _commandDb = commandDb;
         _configuration = configuration;
+        _fileService = fileService;
     }
     
     public async Task<AuthenticateResponse?> Auth(string nameOrEmail, string password)
@@ -121,7 +126,8 @@ public class UserService : IUserService
 
     public async Task<UserInfo> GetUserInfo(long userId)
     {
-        var user = await _queryDb.Users.FirstOrError<User, ArgumentException>(x => x.Id == userId,
+        var user = await _queryDb.Users.Include(x => x.UserAvatars)
+                                        .FirstOrError<User, ArgumentException>(x => x.Id == userId,
             "Пользователь не найден");
         return new UserInfo()
         {
@@ -129,7 +135,34 @@ public class UserService : IUserService
             Username = user.Username,
             About = user.About,
             LastSeen = user.WasOnline,
-            AvatarUrl = "" // todo avatars
+            AvatarUrl = user.CurrentAvatar,
+            Avatars = user.UserAvatars.Select(x => x.AvatarUrl)
         };
+    }
+
+    public async Task UpdateAbout(long userId, string about)
+    {
+        var user = await _queryDb.Users.FirstOrError<User, ArgumentException>(x => x.Id == userId,
+            "Пользователь не найден");
+        user.About = about;
+        _commandDb.Users.Update(user);
+        await _commandDb.SaveChangesAsync();
+    }
+
+    public async Task UploadPhoto(long userId, IFormFile photo, IWebHostEnvironment env)
+    {
+        var user = await _queryDb.Users.FirstOrError<User, ArgumentException>(x => x.Id == userId,
+            "Пользователь не найден");
+        var avatarPath = await _fileService.UploadAvatar(userId, photo, env.WebRootPath, AvatarType.User);
+        var avatar = new UserAvatar
+        {
+            AvatarUrl = avatarPath,
+            UserId = userId
+        };
+        await _commandDb.UserAvatars.AddAsync(avatar);
+        await _commandDb.SaveChangesAsync();
+        user.CurrentAvatar = avatar.AvatarUrl;
+        _commandDb.Users.Update(user);
+        await _commandDb.SaveChangesAsync();
     }
 }

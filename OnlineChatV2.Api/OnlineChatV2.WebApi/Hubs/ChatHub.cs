@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Security.Authentication;
+using Microsoft.AspNetCore.SignalR;
+using OnlineChatV2.Domain;
 using OnlineChatV2.Domain.Enums;
 using OnlineChatV2.WebApi.Hubs.EventManagement;
 using OnlineChatV2.WebApi.Hubs.EventManagement.EventsAndReceivers;
 using OnlineChatV2.WebApi.Models;
+using OnlineChatV2.WebApi.Models.ActionContexts;
 using OnlineChatV2.WebApi.Services.Base;
 using OnlineChatV2.WebApi.Utilities;
 
@@ -16,13 +19,15 @@ public class ChatHub : BaseChatHub
     private readonly IChatService _chatService;
     private readonly IChatHubStore _store;
     private readonly IUserService _userService;
+    private readonly IWebHostEnvironment _environment;
 
-    public ChatHub(EventBus eventBus, IChatService service, IChatHubStore store, IUserService userService)
+    public ChatHub(EventBus eventBus, IChatService service, IChatHubStore store, IUserService userService, IWebHostEnvironment environment)
     {
         _eventBus = eventBus;
         _chatService = service;
         _store = store;
         _userService = userService;
+        _environment = environment;
     }
 
     // todo выяснить почему не срабатывает это дерьмо
@@ -34,7 +39,8 @@ public class ChatHub : BaseChatHub
             return;
 
         _store.AddUser(Context.ConnectionId, user.Id);
-        await Clients.All.SendAsync("UserOnline", new { Id = user.Id });
+        await Clients.Others.SendAsync("UserOnline", user.Id);
+        await Clients.Caller.SendAsync("SetUsersOnline", _store.GetOnlineUsers());
         
         await base.OnConnectedAsync();
     }
@@ -47,7 +53,8 @@ public class ChatHub : BaseChatHub
             return;
 
         _store.AddUser(Context.ConnectionId, user.Id);
-        await Clients.All.SendAsync("UserOnline", user.Id);
+        await Clients.Others.SendAsync("UserOnline", user.Id);
+        await Clients.Caller.SendAsync("SetUsersOnline", _store.GetOnlineUsers());
         
         await base.OnConnectedAsync();;
     }
@@ -83,31 +90,153 @@ public class ChatHub : BaseChatHub
         var result = await _chatService.SaveMessage(user, message);
 
         var fromId = _chatService.GetChatType(message.ChatId) == ChatType.Group ? message.ChatId : user.Id;
-        await Clients.OthersInGroup(groupId).SendAsync("ReceiveMessage",
-            fromId, result);
-        await Clients.Caller.SendAsync("MessageDelivered", result.MessageDate);
+        await InvokeSendOnClients(new InvokeSendContext()
+        {
+            FromId = fromId,
+            GroupId = groupId,
+            Message = result,
+            ToChatId = message.ChatId
+        });
+    }
+
+    public async Task AddUser(long chatId, long userId)
+    {
+        var user = GetUserFromContext(HttpContext);
+        if(_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+            await InvokeActionOnClients(new UserMoveActionContext
+            {
+               ChatId = chatId,
+               Invoker = user,
+               TargetId = userId
+            }, ChatAction.AddUser);
+        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.AddUser);
+
+    }
+
+    public async Task RemoveUser(long chatId, long userId) 
+    {
+        var user = GetUserFromContext(HttpContext);
+        if (!await _chatService.IsHavePermission(user.Id, chatId))
+            throw new AuthenticationException("Нет прав для удаления");
+        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        {
+            await InvokeActionOnClients(new UserMoveActionContext
+            {
+                ChatId = chatId,
+                Invoker = user,
+                TargetId = userId
+            }, ChatAction.RemoveUser);
+            _store.RemoveUserFromGroup(userId, groupId);   
+        }
+        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.RemoveUser);
+    }
+
+    public async Task LeaveChat(long chatId)
+    {
+        var user = GetUserFromContext(HttpContext);
+        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        {
+            await InvokeActionOnClients(new UserMoveActionContext()
+            {
+                ChatId = chatId,
+                Invoker = user,
+                TargetId = user.Id
+            }, ChatAction.UserLeave);
+            _store.RemoveUserFromGroup(user.Id, groupId);
+        }
+        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.UserLeave);
+    }
+
+    public async Task ChangeChatName(long chatId, string newName)
+    {
+        var user = GetUserFromContext(HttpContext);
+        if (!await _chatService.IsHavePermission(user.Id, chatId))
+            throw new AuthenticationException("Нет прав");
+        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        {
+            await InvokeActionOnClients(new ChangeNameActionContext()
+            {
+                ChatId = chatId,
+                Invoker = user,
+                NewName = newName,
+            }, ChatAction.ChangeGroup);
+        }
+        await _chatService.ChangeName(chatId, newName);
+    }
+
+    public async Task ChangeChatAvatar(long chatId, IFormFile photo)
+    {
+        var user = GetUserFromContext(HttpContext);
+        if (!await _chatService.IsHavePermission(user.Id, chatId))
+            throw new AuthenticationException("Нет прав");
+        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        {
+            await InvokeActionOnClients(new BaseActionContext()
+            {
+                ChatId = chatId,
+                Invoker = user,
+            }, ChatAction.ChangeAvatar);
+        }
+
+        await _chatService.UploadAvatar(chatId, photo, _environment);
+    }
+    
+    public async Task UpdateAbout(long chatId, string about)
+    {
+        var user = GetUserFromContext(HttpContext);
+        if (!await _chatService.IsHavePermission(user.Id, chatId))
+            throw new AuthenticationException("Нет прав");
+        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        {
+            await Clients.Group(groupId).SendAsync("AboutChanged", about);
+        }
+        await _chatService.UpdateAbout(chatId, about);
+    }
+
+    private async Task InvokeActionOnClients(BaseActionContext context, ChatAction action)
+    {
+        var groupId = await ValidateChatConnect(_chatService, context.ChatId);
+        if (groupId == null) return;
+        if (_chatService.GetChatType(context.ChatId) == ChatType.Personal)
+            return;
+        var dto = await _chatService.GenerateChatActionMessage(context, action);
+        var result = await _chatService.SaveMessage(context.Invoker, dto, MessageType.System);
+        await InvokeSendOnClients(new InvokeSendContext()
+        {
+            FromId = context.Invoker.Id,
+            GroupId = groupId,
+            Message = result,
+            ToChatId = context.ChatId
+        });
+    }
+    
+    private async Task InvokeSendOnClients(InvokeSendContext context)
+    {
+        await Clients.OthersInGroup(context.GroupId).SendAsync("ReceiveMessage",
+            context.FromId, context.Message);
+        await Clients.Caller.SendAsync("MessageDelivered", context.Message.MessageDate);
 
         var clientsForNotify = new List<string>();
-        if (_chatService.GetChatType(message.ChatId) == ChatType.Personal)
+        if (_chatService.GetChatType(context.ToChatId) == ChatType.Personal)
         {
-            var res = _store.GetUserConnectionId(message.ChatId);
+            var res = _store.GetUserConnectionId(context.ToChatId);
             if (res is null)
                 return;
             clientsForNotify.Add(res);
         }
         else
         {
-            clientsForNotify.AddRange(_store.GetGroupMembers(groupId).Where(x => x != Context.ConnectionId));
+            clientsForNotify.AddRange(_store.GetGroupMembers(context.GroupId).Where(x => x != Context.ConnectionId));
         }
 
         foreach (var clientId in clientsForNotify)
             await Clients.Client(clientId).SendAsync("PushNotify", new PushNotifyModel
             {
-                ChatId = fromId,
-                MessageText = result.MessageText,
-                MessageDate = result.MessageDate,
-                Sender = result.Sender,
-                ChatName = result.ChatName
+                ChatId = context.FromId,
+                MessageText = context.Message.MessageText,
+                MessageDate = context.Message.MessageDate,
+                Sender = context.Message.Sender,
+                ChatName = context.Message.ChatName
             });
     }
 

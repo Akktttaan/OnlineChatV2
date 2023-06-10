@@ -12,4 +12,6 @@ public class Chat
     public long OwnerId { get; set; }
     public User Owner { get; set; }
     public string Description { get; set; }
+    public string CurrentAvatar { get; set; }
+    public ICollection<ChatAvatar> Avatars { get; set; }
 }

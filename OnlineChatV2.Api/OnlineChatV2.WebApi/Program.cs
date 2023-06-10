@@ -24,13 +24,13 @@ builder.Services
     .AddTransient<IChatService, ChatService>()
     .AddScoped<IContactsService, ContactsService>()
     .AddSingleton<IChatHubStore, ChatHubStore>()
+    .AddSingleton<IFileService, FileService>()
     .AddCorsPolicy()
     .AddSignalR(opt => opt.AddFilter<AuthHubFilter>())
     .AddHubOptions<ChatHub>(options =>
     {
         options.AddFilter<AuthHubFilter>();
-    })
-;
+    });
 
 
 var app = builder.Build();

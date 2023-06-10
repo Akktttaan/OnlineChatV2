@@ -61,4 +61,12 @@ public class User
     /// О себе
     /// </summary>
     public string About { get; set; }
+    
+    public string CurrentAvatar { get; set; }
+    public ICollection<UserAvatar> UserAvatars { get; set; }
+
+    public UserAvatar GetLastAvatar()
+    {
+        return UserAvatars?.FirstOrDefault(x => x.Id == UserAvatars.Max(x => x.Id));
+    }
 }

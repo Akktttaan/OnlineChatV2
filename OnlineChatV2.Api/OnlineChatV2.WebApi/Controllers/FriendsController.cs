@@ -67,4 +67,28 @@ public class FriendsController : ControllerBase
     {
         return await _contactsService.SearchUsers(searchString);
     }
+
+    [HttpGet("missingChatUsers")]
+    [SameUserCheck]
+    [Authorize]
+    [ProducesResponseType(typeof(ContactModel[]), 200)]
+    public async Task<IEnumerable<ContactModel>> GetMissingChatUsers(long userId, long chatId)
+    {
+        return await _contactsService.MissingChatUsers(userId, chatId);
+    }
+    
+    [HttpGet("getUserInfo")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserInfo), 200)]
+    public async Task<IActionResult> GetUserInfo([FromServices] IUserService userService, long userId)
+    {
+        try
+        {
+            return Ok(await userService.GetUserInfo(userId));
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

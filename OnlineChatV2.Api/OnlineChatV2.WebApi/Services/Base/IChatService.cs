@@ -1,6 +1,7 @@
 ﻿using OnlineChatV2.Domain;
 using OnlineChatV2.Domain.Enums;
 using OnlineChatV2.WebApi.Models;
+using OnlineChatV2.WebApi.Models.ActionContexts;
 
 namespace OnlineChatV2.WebApi.Services.Base;
 
@@ -20,6 +21,10 @@ public interface IChatService
     Task<ChatHistoryModel> SaveMessage(User user, MessageDto message, MessageType type = MessageType.Common);
 
     Task<ChatInfo> GetChatInfo(long chatId);
-    Task AddUserToChat(long chatId, long userId);
-    Task RemoveUserFromChat(long chatId, long userId);
+    Task MoveUserInChat(long chatId, long userId, ChatAction action);
+    Task<MessageDto> GenerateChatActionMessage(BaseActionContext context, ChatAction action);
+    Task<bool> IsHavePermission(long userId, long chatId);
+    Task UploadAvatar(long chatId, IFormFile photo, IWebHostEnvironment env);
+    Task ChangeName(long chatId, string newName);
+    Task UpdateAbout(long chatId, string about);
 }

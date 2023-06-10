@@ -1,4 +1,6 @@
-﻿namespace OnlineChatV2.WebApi.Utilities;
+﻿using OnlineChatV2.WebApi.Infrastructure;
+
+namespace OnlineChatV2.WebApi.Utilities;
 
 public static class Extensions
 {
@@ -30,5 +32,19 @@ public static class Extensions
                 return entity != null ? entity : throw new Exception(notFoundError);
             }
         );
+    }
+    
+    public static string GetEnumInfo(this Enum value)
+    {
+        var type = value.GetType();
+        var memberInfo = type.GetMember(value.ToString());
+        var attributes = memberInfo[0].GetCustomAttributes(typeof(EnumInfoAttribute), false);
+        
+        if (attributes.Length > 0 && attributes[0] is EnumInfoAttribute attribute)
+        {
+            return attribute.Name;
+        }
+
+        return value.ToString();
     }
 }

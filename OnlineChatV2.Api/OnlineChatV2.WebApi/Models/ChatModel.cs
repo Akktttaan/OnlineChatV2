@@ -8,4 +8,5 @@ public class ChatModel
     public string LastMessageSenderName { get; set; }
     public string LastMessageText { get; set; }
     public DateTime? LastMessageDate { get; set; }
+    public string AvatarUrl { get; set; }
 }

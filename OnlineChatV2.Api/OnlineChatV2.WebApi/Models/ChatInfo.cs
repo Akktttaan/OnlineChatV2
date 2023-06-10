@@ -7,6 +7,7 @@ public class ChatInfo
     public string ChatDescription { get; set; }
     public ChatMember[] Members { get; set; }
     public long OwnerId { get; set; }
+    public string AvatarUrl { get; set; }
 }
 
 public class ChatMember

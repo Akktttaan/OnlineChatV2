@@ -20,4 +20,6 @@ public interface IChatHubStore
     void RemoveUserFromGroups(string connectionId);
     long? GetUserId(string connectionId);
     IEnumerable<string> GetGroups();
+    IEnumerable<long> GetOnlineUsers();
+    IEnumerable<string> GetOnlineClients();
 }
