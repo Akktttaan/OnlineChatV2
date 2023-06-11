@@ -42,7 +42,7 @@ public class FriendsController : ControllerBase
     {
         try
         {
-            await _contactsService.AddContact(contactDto.UserId, contactDto.ContactId);
+            await _contactsService.RemoveContact(contactDto.UserId, contactDto.ContactId);
             return Ok();
         }
         catch (Exception e)

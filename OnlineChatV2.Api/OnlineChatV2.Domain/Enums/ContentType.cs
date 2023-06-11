@@ -6,5 +6,6 @@ public enum ContentType
     Video,
     Gif,
     File,
+    Audio,
     Link
 }

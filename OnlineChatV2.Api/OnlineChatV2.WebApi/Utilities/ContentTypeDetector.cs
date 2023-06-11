@@ -11,6 +11,7 @@ public class ContentTypeDetector
         ["Picture"] = ContentType.Picture,
         ["Gif"] = ContentType.Gif,
         ["Video"] = ContentType.Video,
+        ["Audio"] = ContentType.Audio
     };
 
     public ContentTypeDetector(IConfiguration configuration)

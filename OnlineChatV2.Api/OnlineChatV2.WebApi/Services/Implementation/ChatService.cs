@@ -338,7 +338,7 @@ public class ChatService : IChatService
         var chatUser = await _commandDb.ChatUsers.FirstOrDefaultAsync(x => x.UserId == userId && x.ChatId == chatId);
         if (chatUser == null)
             return;
-        _commandDb.Remove(chatUser);
+        _commandDb.ChatUsers.Remove(chatUser);
         await _commandDb.SaveChangesAsync();
     }
 
@@ -363,6 +363,11 @@ public class ChatService : IChatService
                 result = $"{leaveTarget.Username} {action.GetEnumInfo()}";
                 break;
             case ChatAction.ChangeGroup:
+                if (context is not ChangeNameActionContext changeNameContext)
+                    throw new Exception("Некорректный контекст");
+                result = $"{context.Invoker.Username} {action.GetEnumInfo()} {changeNameContext.NewName}";
+                break;
+            case  ChatAction.ChangeAvatar:
                 result = $"{context.Invoker.Username} {action.GetEnumInfo()}";
                 break;
             default:
@@ -376,11 +381,11 @@ public class ChatService : IChatService
         };
     }
     
-    public async Task UploadAvatar(long chatId, IFormFile photo)
+    public async Task<string> UploadAvatar(long chatId, IFormFile photo)
     {
         var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId,
             "Пользователь не найден");
-        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.User);
+        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.Chat);
         var avatar = new ChatAvatar()
         {
             AvatarUrl = avatarPath,
@@ -391,13 +396,13 @@ public class ChatService : IChatService
         chat.CurrentAvatar = avatar.AvatarUrl;
         _commandDb.Chats.Update(chat);
         await _commandDb.SaveChangesAsync();
+        return avatar.AvatarUrl;
     }
     
-    public async Task UploadAvatar(long chatId, FileModel photo)
+    public async Task<string> UploadAvatar(long chatId, FileModel photo)
     {
-        var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId,
-            "Пользователь не найден");
-        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.User);
+        var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId, "Пользователь не найден");
+        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.Chat);
         var avatar = new ChatAvatar()
         {
             AvatarUrl = avatarPath,
@@ -406,8 +411,9 @@ public class ChatService : IChatService
         await _commandDb.ChatAvatars.AddAsync(avatar);
         await _commandDb.SaveChangesAsync();
         chat.CurrentAvatar = avatar.AvatarUrl;
-        _commandDb.Chats.Update(chat);
+        _commandDb.Entry(chat).State = EntityState.Modified;
         await _commandDb.SaveChangesAsync();
+        return avatar.AvatarUrl;
     }
     
     public async Task UpdateAbout(long chatId, string about)

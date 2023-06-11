@@ -76,7 +76,8 @@ public class ChatHub : BaseChatHub
         var history = await _chatService.GetChat(user.Id, chatId);
         await Clients.Caller.SendAsync("SetChatHistory", history);
         if(_chatService.GetChatType(chatId) == ChatType.Group)
-            await Clients.Caller.SendAsync("SetChatInfo", await _chatService.GetChatInfo(chatId));
+            await Clients.Group(groupId).SendAsync("SetChatInfo", await _chatService.GetChatInfo(chatId),
+                _chatService.IsHavePermission(user.Id, chatId));
         if (_chatService.GetChatType(chatId) == ChatType.Personal)
             await Clients.Caller.SendAsync("SetUserInfo", await _userService.GetUserInfo(chatId));
     }
@@ -95,8 +96,10 @@ public class ChatHub : BaseChatHub
             FromId = fromId,
             GroupId = groupId,
             Message = result,
-            ToChatId = message.ChatId, 
-            AvatarUrl = _chatService.GetChatType(message.ChatId) == ChatType.Group ? await _chatService.GetChatAvatar(message.ChatId) : user.CurrentAvatar,
+            ToChatId = message.ChatId,
+            AvatarUrl = _chatService.GetChatType(message.ChatId) == ChatType.Group
+                ? await _chatService.GetChatAvatar(message.ChatId)
+                : user.CurrentAvatar,
             NotifyInvoker = false
         });
     }
@@ -126,25 +129,29 @@ public class ChatHub : BaseChatHub
         }
     }
 
-    public async Task RemoveUser(long chatId, long userId) 
+    public async Task RemoveUser(long chatId, long[] userIds) 
     {
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
             throw new AuthenticationException("Нет прав для удаления");
-        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        foreach (var userId in userIds)
         {
-            await InvokeActionOnClients(new UserMoveActionContext
+            if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
             {
-                ChatId = chatId,
-                Invoker = user,
-                TargetId = userId
-            }, ChatAction.RemoveUser);
-            _store.RemoveUserFromGroup(userId, groupId);
-            var connId = _store.GetUserConnectionId(userId);
-            if (connId != null)
-                await Clients.Client(connId).SendAsync("KickedFromChat", chatId);
+                await InvokeActionOnClients(new UserMoveActionContext
+                {
+                    ChatId = chatId,
+                    Invoker = user,
+                    TargetId = userId
+                }, ChatAction.RemoveUser);
+                _store.RemoveUserFromGroup(userId, groupId);
+                var connId = _store.GetUserConnectionId(userId);
+                if (connId != null)
+                    await Clients.Client(connId).SendAsync("KickedFromChat", chatId);
+                await Clients.Group(groupId).SendAsync("UserRemoved", userId, chatId);
+            }
+            await _chatService.MoveUserInChat(chatId, userId, ChatAction.RemoveUser);
         }
-        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.RemoveUser);
     }
 
     public async Task LeaveChat(long chatId)
@@ -159,6 +166,7 @@ public class ChatHub : BaseChatHub
                 TargetId = user.Id
             }, ChatAction.UserLeave, false);
             _store.RemoveUserFromGroup(user.Id, groupId);
+            await Clients.Group(groupId).SendAsync("UserRemoved", user.Id, chatId);
         }
         await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.UserLeave);
     }
@@ -186,6 +194,7 @@ public class ChatHub : BaseChatHub
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
             throw new AuthenticationException("Нет прав");
+        var newUrl = await _chatService.UploadAvatar(chatId, photo);
         if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
         {
             await InvokeActionOnClients(new BaseActionContext()
@@ -193,9 +202,9 @@ public class ChatHub : BaseChatHub
                 ChatId = chatId,
                 Invoker = user,
             }, ChatAction.ChangeAvatar);
+            await Clients.Group(groupId).SendAsync("SetChatAvatar", newUrl);
         }
-
-        await _chatService.UploadAvatar(chatId, photo);
+        
     }
     
     public async Task UpdateAbout(long chatId, string about)
@@ -205,7 +214,7 @@ public class ChatHub : BaseChatHub
             throw new AuthenticationException("Нет прав");
         if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
         {
-            await Clients.Group(groupId).SendAsync("AboutChanged", about);
+            await Clients.Group(groupId).SendAsync("AboutChanged", chatId, about);
         }
         await _chatService.UpdateAbout(chatId, about);
     }
@@ -228,7 +237,7 @@ public class ChatHub : BaseChatHub
             NotifyInvoker = notifyInvoker // оповещаем в т.ч того кто вызвал
         });
     }
-    
+
     private async Task InvokeSendOnClients(InvokeSendContext context)
     {
         if (context.NotifyInvoker)
