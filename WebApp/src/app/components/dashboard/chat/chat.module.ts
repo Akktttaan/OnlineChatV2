@@ -22,6 +22,9 @@ import {ChatProfileSettingsComponent} from './dialogs/chat-profile-settings/chat
 import {LastMessageTimePipe} from "../../shared/pipes/last-message-time.pipe";
 import {ChatSettingsComponent} from './dialogs/chat-settings/chat-settings.component';
 import {PickerComponent} from '@ctrl/ngx-emoji-mart';
+import { SelectContactComponent } from './dialogs/select-contact/select-contact.component';
+import {ImageCropperModule} from "ngx-image-cropper";
+import { UserProfileComponent } from './dialogs/user-profile/user-profile.component';
 
 
 @NgModule({
@@ -35,7 +38,9 @@ import {PickerComponent} from '@ctrl/ngx-emoji-mart';
     SearchComponent,
     ChatProfileSettingsComponent,
     LastMessageTimePipe,
-    ChatSettingsComponent
+    ChatSettingsComponent,
+    SelectContactComponent,
+    UserProfileComponent
   ],
   imports: [
     CommonModule,
@@ -52,7 +57,8 @@ import {PickerComponent} from '@ctrl/ngx-emoji-mart';
     NgOptimizedImage,
     FormsModule,
     ReactiveFormsModule,
-    PickerComponent
+    PickerComponent,
+    ImageCropperModule
   ]
 })
 export class ChatModule {

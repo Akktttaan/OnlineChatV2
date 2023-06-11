@@ -1,6 +1,6 @@
 <!-- Панель со списком чатов -->
 <div class="chat-panel">
-  <div class="chat-header">
+  <div [formGroup]="searchForm" class="chat-header">
     <button (click)="openSettings()" mat-icon-button color="primary" class="settings-button">
       <mat-icon>menu</mat-icon>
     </button>
@@ -8,25 +8,34 @@
       <div class="search-icon">
         <i class="material-icons">search</i>
       </div>
-      <input type="text" class="search-input" placeholder="Поиск">
+      <input formControlName="searchText" type="text" class="search-input" placeholder="Поиск">
+      <button *ngIf="searchForm.value.searchText" class="cancel-search" (click)="clearSearchText()">
+        <mat-icon>cancel</mat-icon>
+      </button>
     </div>
   </div>
 
   <div class="chat-list">
     <!-- Блок чата -->
-    <div class="chat-item" *ngFor="let chat of chats" (click)="openChat(chat.id)">
-      <div class="avatar"></div>
-      <div class="chat-info">
-        <p class="chat-name">{{ chat.name }}</p>
-        <p class="chat-details">
+    <ng-container *ngFor="let chat of chats">
+      <div class="chat-item" *ngIf="chat.visible" (click)="openChat(chat.id, false)">
+        <div [ngClass]="{'avatar-online': chat.status, 'avatar-offline': !chat.status}">
+          <img
+            [src]="environment.apiUrl + '/' + (chat.avatarUrl ? chat.avatarUrl : chat.id < 0 ? 'groupAvatar.png' : 'userAvatar.png')"
+            alt="">
+        </div>
+        <div class="chat-info">
+          <div class="chat-name">{{ chat.name }}</div>
+          <p class="chat-details">
           <span
             class="last-message">
             {{ chat.id < 0 ? !chat.lastMessageFromSender ? chat.lastMessageSenderName ? chat.lastMessageSenderName + ': ' : '' : '' : ''}}
             {{ chat.lastMessageText | slice:0:30 }}
           </span>
-          <span class="last-message-time">{{ chat.lastMessageDate | lastMessageTime }}</span>
-        </p>
+            <span class="last-message-time">{{ chat.lastMessageDate | lastMessageTime }}</span>
+          </p>
+        </div>
       </div>
-    </div>
+    </ng-container>
   </div>
 </div>

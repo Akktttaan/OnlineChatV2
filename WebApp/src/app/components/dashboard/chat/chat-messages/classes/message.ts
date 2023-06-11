@@ -1,4 +1,5 @@
 import {Sender} from "./sender";
+import {MessageType} from "./message-type";
 
 export interface Message {
   type: string;
@@ -6,4 +7,5 @@ export interface Message {
   messageText: string;
   messageDate: Date | string;
   sender: Sender
+  messageType: MessageType
 }

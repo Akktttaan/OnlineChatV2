@@ -4,7 +4,8 @@ import {Pipe} from "@angular/core";
   name: 'lastMessageTime'
 })
 export class LastMessageTimePipe {
-  transform(value: string | Date): string {
+  transform(value: string | Date | undefined): string {
+    if(value == null) return ''
     const date = value instanceof Date ? value : new Date(value);
     const currentDate = new Date((new Date()).getDate() - 24 * 60 * 60 * 1000);
     const lastWeekDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);

@@ -1,20 +1,28 @@
 <div class="chat-info" *ngIf="chat; else nochat">
   <div class="avatar">
+    <img [src]="environment.apiUrl + '/' + (chat.avatarUrl ? chat.avatarUrl : chat.id < 0 ? 'groupAvatar.png' : 'userAvatar.png')" alt="">
   </div>
   <div class="info">
-    <h1>{{chat.name}}</h1>
-    <p>Дополнительная информация</p>
-    <mat-slide-toggle>Отключить уведомления</mat-slide-toggle>
-    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Animi cum distinctio eius enim esse impedit maiores necessitatibus nostrum quam quasi quibusdam repudiandae, saepe sapiente tempora ut veritatis voluptates. Nesciunt, vel?</p>
+    <h1>{{ chat.name }}</h1>
+    <ng-container *ngIf="chat.id > 0; else group">
+      <div>Описание: {{contactInfo?.about}}</div>
+      <div>В последний раз был: {{contactInfo?.lastSeen | lastMessageTime}}</div>
+    </ng-container>
+    <ng-template #group>
+
+    </ng-template>
   </div>
-  <mat-tab-group>
+  <mat-tab-group #tabGroup>
     <mat-tab label="Members" *ngIf="chat.id < 0">
       <div class="contact-item" *ngFor="let item of chatInfo?.members">
-        <img src="{{item.avatarUrl}}" alt="">
+        <img [src]="environment.apiUrl + '/' + (item.avatarUrl ? item.avatarUrl : 'userAvatar.png')" alt="">
         {{item.userName}} <p *ngIf="chatInfo.ownerId == item.userId" style="color: blue; margin-left: 5px;">владелец</p>
       </div>
     </mat-tab>
     <mat-tab label="Media">
+      <!-- Содержимое вкладки Shared Media -->
+    </mat-tab>
+    <mat-tab label="Audio">
       <!-- Содержимое вкладки Shared Media -->
     </mat-tab>
     <mat-tab label="Files">

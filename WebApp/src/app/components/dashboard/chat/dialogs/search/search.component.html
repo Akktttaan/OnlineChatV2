@@ -7,8 +7,8 @@
       <input formControlName="searchText" type="text" class="search-input" placeholder="Поиск">
     </div>
     <div class="contact-item" *ngFor="let item of contacts | async" (click)="openChat(item)">
-      <img src="{{item.photoUrl}}" alt="">
-      {{item.username}}
+      <img [src]="environment.apiUrl + '/' + (item.photoUrl ? item.photoUrl : 'userAvatar.png')" alt="">
+      {{item.userName}}
     </div>
   </form>
 </section>

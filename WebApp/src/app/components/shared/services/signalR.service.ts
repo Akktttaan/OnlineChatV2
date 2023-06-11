@@ -10,6 +10,10 @@ import {ChatHistory} from "../../dashboard/chat/chat-messages/classes/chat-histo
 import {NewMessage} from "../../dashboard/chat/chat-messages/classes/new-message";
 import {PushNotifyModel} from "../models/push-notify-model";
 import {ChatInfo} from "../../dashboard/chat/chat/classes/chat-info";
+import {OnlineStatus} from "../classes/online-status";
+import {MessageType} from "../../dashboard/chat/chat-messages/classes/message-type";
+import {FormFile} from "../../dashboard/chat/dialogs/group-create/interfaces/form-file";
+import {ContactModel} from "../../../../api/OnlineChatClient";
 
 @Injectable({
   providedIn: 'root'
@@ -18,14 +22,23 @@ export class SignalRService {
   private hubConnection: signalR.HubConnection;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
+  public currentChat: ChatModel;
+  public chatsInChatList: ChatModel[];
+  public friendList: ContactModel[];
+
+  leaveChatEventSbj = new Subject<boolean>()
   chatInfos: Array<ChatInfo> = []
   connectedChatHistories: Array<ChatHistory> = []
+
   chats$ = new Subject<ChatModel[]>();
   chatHistory$ = new ReplaySubject<Message[]>(1);
   chatInfo$ = new ReplaySubject<ChatInfo>(1)
   connectionEstablished$ = new BehaviorSubject<boolean>(false);
   newMessages$ = new Subject<NewMessage>()
   pushNotifyMessages$ = new Subject<PushNotifyModel>()
+  onlineStatus$ = new ReplaySubject<OnlineStatus>()
+  setNewChatName$ = new Subject<{chatId: number, newName: string}>()
+  kickedFromChat$ = new Subject<number>()
 
   clientId: number;
 
@@ -33,7 +46,7 @@ export class SignalRService {
     this.clientId = parseInt(localStorage.getItem('clientId')!)
   }
 
-  start(token: string) {
+  async start(token: string) {
     this.createConnection(token);
     this.registerOnServerEvents();
     this.startConnection();
@@ -64,7 +77,7 @@ export class SignalRService {
     );
   }
 
-  private stopConnection(){
+  public stopConnection(){
     if(this.hubConnection){
       this.hubConnection.stop()
       console.log("Отключено от хаба");
@@ -107,6 +120,7 @@ export class SignalRService {
         avatarUrl: '',
         nicknameColor: ''
       },
+      messageType: MessageType.Common
     }
     this.connectedChatHistories.find(x => x.chatId == chatId)?.chatHistory.push(message)
     this.pushNotifyMessages$.next({
@@ -114,7 +128,8 @@ export class SignalRService {
       messageText: message.messageText,
       sender: message.sender,
       messageDate: message.messageDate,
-      chatName: chatName
+      chatName: chatName,
+      avatarUrl: this.currentChat.avatarUrl
     })
     this.hubConnection.invoke('Send', {
       chatId: parseInt(chatId.toString()),
@@ -145,9 +160,41 @@ export class SignalRService {
       .invoke('CreateChat', {
         chatName: chatModel.chatName,
         createdById: parseInt(chatModel.createdById),
-        chatUserIds: chatModel.chatUserIds
+        chatUserIds: chatModel.chatUserIds,
+        avatar: chatModel.avatar,
+        description: chatModel.description
       })
       .catch(err => console.error(err));
+  }
+
+  addPeopleToGroup(contactIds: Array<number>, chatId: number){
+    if(!contactIds) return
+    this.hubConnection.invoke('AddUser', chatId, contactIds)
+  }
+
+  leaveChat(chatId: number){
+    this.chatsInChatList.splice(
+      this.chatsInChatList.indexOf(this.chatsInChatList.find(x => x.id == chatId)!), 1
+    )
+    this.leaveChatEventSbj.next(true)
+    this.hubConnection.invoke("LeaveChat", chatId)
+  }
+
+  removeUsers(userIds: Array<number>, chatId: number){
+    if(!userIds) return
+    this.hubConnection.invoke("RemoveUser", chatId, userIds)
+  }
+
+  updateChatAvatar(avatar: FormFile, chatId: number){
+    this.hubConnection.invoke("ChangeChatAvatar", chatId, avatar)
+  }
+
+  updateAboutChat(aboutText: string, chatId: number){
+    this.hubConnection.invoke("UpdateAbout", chatId, aboutText)
+  }
+
+  updateChatName(chatName: string, chatId: number){
+    this.hubConnection.invoke("ChangeChatName", chatId, chatName)
   }
 
   private registerOnServerEvents(): void {
@@ -159,10 +206,10 @@ export class SignalRService {
       const chat = this.connectedChatHistories[this.connectedChatHistories.length - 1]
       chat.chatHistory = data;
       this.chatHistory$.next(data)
+      console.log("История чатов", chat.chatHistory)
     })
 
     this.hubConnection.on('SetChatInfo', (data: ChatInfo) => {
-      console.log("Информация о чатах ->", data)
       this.chatInfos.push(data)
       this.chatInfo$.next(data)
     })
@@ -172,6 +219,7 @@ export class SignalRService {
     })
 
     this.hubConnection.on('ReceiveMessage', (chatId: number, message: Message) => {
+      console.log("ReceiveMessage в чате -", chatId, message)
       const newMessage = {
         chatId: chatId,
         message: message
@@ -181,7 +229,7 @@ export class SignalRService {
     });
 
     this.hubConnection.on('PushNotify', (message: PushNotifyModel) => {
-      console.log("Уведомление-> ", message)
+      console.log("Уведомление", message)
       this.pushNotifyMessages$.next(message)
       this.sendNotification('Новое сообщение', {
         body: 'Вы получили новое сообщение',
@@ -193,11 +241,39 @@ export class SignalRService {
     })
 
     this.hubConnection.on('UserOnline', (id: number) => {
-      console.log("Этот лох онлайн -> ", id)
+      this.onlineStatus$.next({userId: id, status: true})
     })
 
     this.hubConnection.on('UserOffline', (id: number, time: number) => {
-      console.log("Этой хуй вышел из сети ", id, "в такое то время ", time)
+      this.onlineStatus$.next({userId: id, status: false})
+    })
+
+    this.hubConnection.on('SetUsersOnline', (ids: Array<number>) => {
+      ids.forEach(x => {
+        this.onlineStatus$.next({userId: x, status: true});
+      })
+    })
+
+    this.hubConnection.on("KickedFromChat", (chatId: number) => {
+      this.kickedFromChat$.next(chatId)
+    })
+
+    this.hubConnection.on('SetChatName', (chatId: number, newName: string) => {
+      console.log("Изменение название чата в чате ", chatId, "на ", newName)
+      this.setNewChatName$.next({chatId: chatId, newName: newName})
+    })
+
+    this.hubConnection.on('AboutChanged', (chatId:number, about: string) => {
+      let oldChatInfo = this.chatInfos.find(x => x.chatId == chatId)
+      const model = new ChatInfo()
+      model.chatId = chatId;
+      model.ownerId = oldChatInfo?.ownerId!;
+      model.chatName = oldChatInfo?.chatName!;
+      model.members = oldChatInfo?.members!;
+      model.chatDescription = about;
+      this.chatInfos.splice(this.chatInfos.indexOf(oldChatInfo!),1)
+      this.chatInfos.push(model);
+      this.chatInfo$.next(model);
     })
   }
 
@@ -209,5 +285,9 @@ export class SignalRService {
     if (Notification.permission === 'granted') {
       new Notification(title, options);
     }
+  }
+
+  getChatOwnerId(chatId: number): number{
+    return this.chatInfos.find(x => x.chatId == chatId)?.ownerId!;
   }
 }

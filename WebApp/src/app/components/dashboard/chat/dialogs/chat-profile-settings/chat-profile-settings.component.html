@@ -1,5 +1,22 @@
-<div>
+<form [formGroup]="dataForm" (ngSubmit)="onSubmit()">
   <h3 mat-dialog-title>Настройки</h3>
   <mat-dialog-content>
+    <mat-form-field appearance="fill">
+      <mat-label>Название чата</mat-label>
+      <input matInput type="text" formControlName="chatName">
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Описание чата</mat-label>
+      <input matInput type="text" formControlName="chatDescription">
+    </mat-form-field>
+    <div>
+      <h4>Выбор фотографии</h4>
+      <img [src]="imageSrc" alt="">
+      <input type="file" accept="image/*" (change)="onFileSelected($event)">
+    </div>
+    <button mat-raised-button color="primary" type="button" (click)="deleteFromGroup()">Удалить из группы</button>
   </mat-dialog-content>
-</div>
+  <mat-dialog-actions>
+    <button mat-raised-button color="primary" type="submit">Сохранить</button>
+  </mat-dialog-actions>
+</form>

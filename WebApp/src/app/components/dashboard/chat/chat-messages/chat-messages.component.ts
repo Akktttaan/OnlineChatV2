@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Renderer2, ViewChild} from '@angular/core';
 import {SignalRService} from "../../../shared/services/signalR.service";
 import {Message} from "./classes/message";
 import {ChatModel} from "../chat-list/interfaces/chat-model";
@@ -9,6 +9,8 @@ import {filter, Subject} from "rxjs";
 import {FormBuilder} from "@angular/forms";
 import {NewMessage} from "./classes/new-message";
 import {Sender} from "./classes/sender";
+import {MessageType} from "./classes/message-type";
+import {environment} from "../../../../../environments/environment";
 
 @Component({
   selector: 'app-chat-messages',
@@ -17,10 +19,11 @@ import {Sender} from "./classes/sender";
 })
 export class ChatMessagesComponent implements AfterViewInit, OnInit {
   @Input() public chat: ChatModel
-  @Input() public chatChanged: Subject<boolean>
   @ViewChild("chatList", {static: false}) chatListRef: ElementRef
   messages: Array<Message> = [];
   clientId: number
+  protected readonly MessageType = MessageType;
+  environment = environment;
 
   dataForm = this.builder.group({
     messageText: ['']
@@ -68,7 +71,7 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
   }
 
   scrollToBottom(behavior: ScrollBehavior = 'auto') {
-    const nativeElement = this.chatListRef.nativeElement
+    const nativeElement = this.chatListRef?.nativeElement
     setTimeout(() => {
       nativeElement.scrollTo({
         top: nativeElement.scrollHeight,
@@ -80,7 +83,6 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
   openChatSettings() {
     this.dialog.open(ChatSettingsComponent, {
       autoFocus: false,
-      width: '250px',
       position: {
         top: '60px',
         right: '25%'
@@ -89,7 +91,8 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
       disableClose: false,
       data: {
         chat: this.chat,
-        clientId: this.clientId
+        clientId: this.clientId,
+        messages: this.messages,
       }
     })
   }
@@ -103,6 +106,7 @@ export class ChatMessagesComponent implements AfterViewInit, OnInit {
       type: 'my',
       messageDate: new Date(),
       sender: new Sender(),
+      messageType: MessageType.Common
     }
     this.messages.push(message)
     this.signalR.send(this.dataForm.value.messageText!, this.chat.id, this.chat.name)

@@ -6,6 +6,7 @@ import {ChatModel} from "../chat-list/interfaces/chat-model";
 import {Subject} from "rxjs";
 import {SignalRService} from "../../../shared/services/signalR.service";
 import {AuthService} from "../../../shared/services/auth.service";
+import {OnlineChatClient} from "../../../../../api/OnlineChatClient";
 
 @Component({
   selector: 'app-chat',
@@ -21,17 +22,22 @@ export class ChatComponent implements AfterViewInit{
   clientId: number
 
   currentChat: ChatModel
-  chatChanged = new Subject<boolean>()
-
+  changeChatSbj = new Subject<boolean>()
   constructor(private dialog: MatDialog,
               private route: ActivatedRoute,
               private signalR: SignalRService,
-              private auth: AuthService) {
+              private auth: AuthService,
+              private api: OnlineChatClient) {
     this.clientId = this.route.snapshot.params['id']
   }
 
-  ngAfterViewInit() {
-    this.signalR.start(this.auth.getToken()!);
+  async ngAfterViewInit() {
+    await this.signalR.start(this.auth.getToken()!);
+    this.api.all2(this.clientId)
+      .subscribe(data => {
+        this.signalR.friendList = data;
+        console.log("Мои контакты", data);
+      })
   }
 
 
@@ -99,7 +105,9 @@ export class ChatComponent implements AfterViewInit{
   }
 
   onClickChat($event: ChatModel) {
+    this.changeChatSbj.next(true)
     this.currentChat = $event;
+    this.signalR.currentChat = this.currentChat;
     this.signalR.enterToChat($event.id)
   }
 }

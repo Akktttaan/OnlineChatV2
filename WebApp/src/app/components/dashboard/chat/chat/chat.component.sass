@@ -6,13 +6,15 @@
 .box
   flex: 2 2 calc(50% - 10px)
   margin: 5px
-  overflow-x: hidden
+  overflow: hidden
 
 .box:first-child,
 .box:last-child
   flex: 1 1 calc(25% - 10px)
   margin: 5px
-  overflow-x: hidden
+
+.box:last-child
+  overflow-y: auto
 
 .chat-area
   position: relative

@@ -1,0 +1,22 @@
+<section>
+  <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">
+    <mat-dialog-content>
+      <mat-form-field appearance="fill">
+        <mat-label>Никнейм</mat-label>
+        <input matInput type="text" formControlName="username">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>О себе</mat-label>
+        <textarea matInput type="text" formControlName="about"></textarea>
+      </mat-form-field>
+      <div>
+        <h4>Выбор фотографии</h4>
+        <img [src]="imageSrc" alt="">
+        <input type="file" accept="image/*" (change)="onFileSelected($event)">
+      </div>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+      <button mat-raised-button color="primary" type="submit">Сохранить</button>
+    </mat-dialog-actions>
+  </form>
+</section>

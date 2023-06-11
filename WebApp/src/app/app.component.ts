@@ -29,12 +29,5 @@ export class AppComponent implements OnInit {
     } else {
       await this.router.navigate(['login']);
     }
-
-    this.startSignalRService();
-
-
-  }
-
-  startSignalRService(){
   }
 }

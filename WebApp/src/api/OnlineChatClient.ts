@@ -296,6 +296,62 @@ export class OnlineChatClient {
   }
 
   /**
+   * @param chatId (optional)
+   * @return Success
+   */
+  chatInfo(chatId: number | undefined): Observable<ChatInfo> {
+    let url_ = this.baseUrl + "/api/chat/chatInfo?";
+    if (chatId === null)
+      throw new Error("The parameter 'chatId' cannot be null.");
+    else if (chatId !== undefined)
+      url_ += "chatId=" + encodeURIComponent("" + chatId) + "&";
+    url_ = url_.replace(/[?&]$/, "");
+
+    let options_ : any = {
+      observe: "response",
+      responseType: "blob",
+      headers: new HttpHeaders({
+        "Accept": "text/plain"
+      })
+    };
+
+    return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+      return this.processChatInfo(response_);
+    })).pipe(_observableCatch((response_: any) => {
+      if (response_ instanceof HttpResponseBase) {
+        try {
+          return this.processChatInfo(response_ as any);
+        } catch (e) {
+          return _observableThrow(e) as any as Observable<ChatInfo>;
+        }
+      } else
+        return _observableThrow(response_) as any as Observable<ChatInfo>;
+    }));
+  }
+
+  protected processChatInfo(response: HttpResponseBase): Observable<ChatInfo> {
+    const status = response.status;
+    const responseBlob =
+      response instanceof HttpResponse ? response.body :
+        (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+    let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+    if (status === 200) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        let result200: any = null;
+        let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+        result200 = ChatInfo.fromJS(resultData200);
+        return _observableOf(result200);
+      }));
+    } else if (status !== 200 && status !== 204) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+      }));
+    }
+    return _observableOf(null as any);
+  }
+
+  /**
    * @param body (optional)
    * @return Success
    */
@@ -524,6 +580,234 @@ export class OnlineChatClient {
     }
     return _observableOf(null as any);
   }
+
+  /**
+   * @param userId (optional)
+   * @param chatId (optional)
+   * @return Success
+   */
+  missingChatUsers(userId: number | undefined, chatId: number | undefined): Observable<ContactModel[]> {
+    let url_ = this.baseUrl + "/api/contacts/missingChatUsers?";
+    if (userId === null)
+      throw new Error("The parameter 'userId' cannot be null.");
+    else if (userId !== undefined)
+      url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+    if (chatId === null)
+      throw new Error("The parameter 'chatId' cannot be null.");
+    else if (chatId !== undefined)
+      url_ += "chatId=" + encodeURIComponent("" + chatId) + "&";
+    url_ = url_.replace(/[?&]$/, "");
+
+    let options_ : any = {
+      observe: "response",
+      responseType: "blob",
+      headers: new HttpHeaders({
+        "Accept": "text/plain"
+      })
+    };
+
+    return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+      return this.processMissingChatUsers(response_);
+    })).pipe(_observableCatch((response_: any) => {
+      if (response_ instanceof HttpResponseBase) {
+        try {
+          return this.processMissingChatUsers(response_ as any);
+        } catch (e) {
+          return _observableThrow(e) as any as Observable<ContactModel[]>;
+        }
+      } else
+        return _observableThrow(response_) as any as Observable<ContactModel[]>;
+    }));
+  }
+
+  protected processMissingChatUsers(response: HttpResponseBase): Observable<ContactModel[]> {
+    const status = response.status;
+    const responseBlob =
+      response instanceof HttpResponse ? response.body :
+        (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+    let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+    if (status === 200) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        let result200: any = null;
+        let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+        if (Array.isArray(resultData200)) {
+          result200 = [] as any;
+          for (let item of resultData200)
+            result200!.push(ContactModel.fromJS(item));
+        }
+        else {
+          result200 = <any>null;
+        }
+        return _observableOf(result200);
+      }));
+    } else if (status !== 200 && status !== 204) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+      }));
+    }
+    return _observableOf(null as any);
+  }
+
+  /**
+   * @param userId (optional)
+   * @return Success
+   */
+  getUserInfo(userId: number | undefined): Observable<UserInfo> {
+    let url_ = this.baseUrl + "/api/contacts/getUserInfo?";
+    if (userId === null)
+      throw new Error("The parameter 'userId' cannot be null.");
+    else if (userId !== undefined)
+      url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+    url_ = url_.replace(/[?&]$/, "");
+
+    let options_ : any = {
+      observe: "response",
+      responseType: "blob",
+      headers: new HttpHeaders({
+        "Accept": "text/plain"
+      })
+    };
+
+    return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+      return this.processGetUserInfo(response_);
+    })).pipe(_observableCatch((response_: any) => {
+      if (response_ instanceof HttpResponseBase) {
+        try {
+          return this.processGetUserInfo(response_ as any);
+        } catch (e) {
+          return _observableThrow(e) as any as Observable<UserInfo>;
+        }
+      } else
+        return _observableThrow(response_) as any as Observable<UserInfo>;
+    }));
+  }
+
+  protected processGetUserInfo(response: HttpResponseBase): Observable<UserInfo> {
+    const status = response.status;
+    const responseBlob =
+      response instanceof HttpResponse ? response.body :
+        (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+    let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+    if (status === 200) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        let result200: any = null;
+        let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+        result200 = UserInfo.fromJS(resultData200);
+        return _observableOf(result200);
+      }));
+    } else if (status !== 200 && status !== 204) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+      }));
+    }
+    return _observableOf(null as any);
+  }
+
+  /**
+   * @param body (optional)
+   * @return Success
+   */
+  updateAbout(body: UpdateAboutDto | undefined): Observable<void> {
+    let url_ = this.baseUrl + "/api/profile/updateAbout";
+    url_ = url_.replace(/[?&]$/, "");
+
+    const content_ = JSON.stringify(body);
+
+    let options_ : any = {
+      body: content_,
+      observe: "response",
+      responseType: "blob",
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+      })
+    };
+
+    return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+      return this.processUpdateAbout(response_);
+    })).pipe(_observableCatch((response_: any) => {
+      if (response_ instanceof HttpResponseBase) {
+        try {
+          return this.processUpdateAbout(response_ as any);
+        } catch (e) {
+          return _observableThrow(e) as any as Observable<void>;
+        }
+      } else
+        return _observableThrow(response_) as any as Observable<void>;
+    }));
+  }
+
+  protected processUpdateAbout(response: HttpResponseBase): Observable<void> {
+    const status = response.status;
+    const responseBlob =
+      response instanceof HttpResponse ? response.body :
+        (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+    let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+    if (status === 200) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return _observableOf(null as any);
+      }));
+    } else if (status !== 200 && status !== 204) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+      }));
+    }
+    return _observableOf(null as any);
+  }
+
+  /**
+   * @param body (optional)
+   * @return Success
+   */
+  uploadPhoto(body: UploadPhotoDto | undefined): Observable<void> {
+    let url_ = this.baseUrl + "/api/profile/uploadPhoto";
+    url_ = url_.replace(/[?&]$/, "");
+
+    const content_ = JSON.stringify(body);
+
+    let options_ : any = {
+      body: content_,
+      observe: "response",
+      responseType: "blob",
+      headers: new HttpHeaders({
+        "Content-Type": "application/json",
+      })
+    };
+
+    return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+      return this.processUploadPhoto(response_);
+    })).pipe(_observableCatch((response_: any) => {
+      if (response_ instanceof HttpResponseBase) {
+        try {
+          return this.processUploadPhoto(response_ as any);
+        } catch (e) {
+          return _observableThrow(e) as any as Observable<void>;
+        }
+      } else
+        return _observableThrow(response_) as any as Observable<void>;
+    }));
+  }
+
+  protected processUploadPhoto(response: HttpResponseBase): Observable<void> {
+    const status = response.status;
+    const responseBlob =
+      response instanceof HttpResponse ? response.body :
+        (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+    let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+    if (status === 200) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return _observableOf(null as any);
+      }));
+    } else if (status !== 200 && status !== 204) {
+      return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+        return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+      }));
+    }
+    return _observableOf(null as any);
+  }
 }
 
 export class AuthenticateResponse implements IAuthenticateResponse {
@@ -574,9 +858,117 @@ export interface IAuthenticateResponse {
   token?: string | undefined;
 }
 
+export class ChatInfo implements IChatInfo {
+  chatId?: number;
+  chatName?: string | undefined;
+  chatDescription?: string | undefined;
+  members?: ChatMember[] | undefined;
+  ownerId?: number;
+  avatarUrl?: string | undefined;
+
+  constructor(data?: IChatInfo) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      this.chatId = _data["chatId"];
+      this.chatName = _data["chatName"];
+      this.chatDescription = _data["chatDescription"];
+      if (Array.isArray(_data["members"])) {
+        this.members = [] as any;
+        for (let item of _data["members"])
+          this.members!.push(ChatMember.fromJS(item));
+      }
+      this.ownerId = _data["ownerId"];
+      this.avatarUrl = _data["avatarUrl"];
+    }
+  }
+
+  static fromJS(data: any): ChatInfo {
+    data = typeof data === 'object' ? data : {};
+    let result = new ChatInfo();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    data["chatId"] = this.chatId;
+    data["chatName"] = this.chatName;
+    data["chatDescription"] = this.chatDescription;
+    if (Array.isArray(this.members)) {
+      data["members"] = [];
+      for (let item of this.members)
+        data["members"].push(item.toJSON());
+    }
+    data["ownerId"] = this.ownerId;
+    data["avatarUrl"] = this.avatarUrl;
+    return data;
+  }
+}
+
+export interface IChatInfo {
+  chatId?: number;
+  chatName?: string | undefined;
+  chatDescription?: string | undefined;
+  members?: ChatMember[] | undefined;
+  ownerId?: number;
+  avatarUrl?: string | undefined;
+}
+
+export class ChatMember implements IChatMember {
+  userId?: number;
+  userName?: string | undefined;
+  avatarUrl?: string | undefined;
+
+  constructor(data?: IChatMember) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      this.userId = _data["userId"];
+      this.userName = _data["userName"];
+      this.avatarUrl = _data["avatarUrl"];
+    }
+  }
+
+  static fromJS(data: any): ChatMember {
+    data = typeof data === 'object' ? data : {};
+    let result = new ChatMember();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    data["userId"] = this.userId;
+    data["userName"] = this.userName;
+    data["avatarUrl"] = this.avatarUrl;
+    return data;
+  }
+}
+
+export interface IChatMember {
+  userId?: number;
+  userName?: string | undefined;
+  avatarUrl?: string | undefined;
+}
+
 export class ContactModel implements IContactModel {
   userId?: number;
-  username?: string | undefined;
+  userName?: string | undefined;
   photoUrl?: string | undefined;
 
   constructor(data?: IContactModel) {
@@ -591,7 +983,7 @@ export class ContactModel implements IContactModel {
   init(_data?: any) {
     if (_data) {
       this.userId = _data["userId"];
-      this.username = _data["username"];
+      this.userName = _data["userName"];
       this.photoUrl = _data["photoUrl"];
     }
   }
@@ -606,7 +998,7 @@ export class ContactModel implements IContactModel {
   toJSON(data?: any) {
     data = typeof data === 'object' ? data : {};
     data["userId"] = this.userId;
-    data["username"] = this.username;
+    data["userName"] = this.userName;
     data["photoUrl"] = this.photoUrl;
     return data;
   }
@@ -614,7 +1006,7 @@ export class ContactModel implements IContactModel {
 
 export interface IContactModel {
   userId?: number;
-  username?: string | undefined;
+  userName?: string | undefined;
   photoUrl?: string | undefined;
 }
 
@@ -656,6 +1048,46 @@ export class ContactOperationDto implements IContactOperationDto {
 export interface IContactOperationDto {
   userId?: number;
   contactId?: number;
+}
+
+export class FileModel implements IFileModel {
+  data?: string | undefined;
+  name?: string | undefined;
+
+  constructor(data?: IFileModel) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      this.data = _data["data"];
+      this.name = _data["name"];
+    }
+  }
+
+  static fromJS(data: any): FileModel {
+    data = typeof data === 'object' ? data : {};
+    let result = new FileModel();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    data["data"] = this.data;
+    data["name"] = this.name;
+    return data;
+  }
+}
+
+export interface IFileModel {
+  data?: string | undefined;
+  name?: string | undefined;
 }
 
 export class LoginDto implements ILoginDto {
@@ -740,6 +1172,150 @@ export interface IRegisterDto {
   username?: string | undefined;
   email?: string | undefined;
   password?: string | undefined;
+}
+
+export class UpdateAboutDto implements IUpdateAboutDto {
+  userId?: number;
+  about?: string | undefined;
+
+  constructor(data?: IUpdateAboutDto) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      this.userId = _data["userId"];
+      this.about = _data["about"];
+    }
+  }
+
+  static fromJS(data: any): UpdateAboutDto {
+    data = typeof data === 'object' ? data : {};
+    let result = new UpdateAboutDto();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    data["userId"] = this.userId;
+    data["about"] = this.about;
+    return data;
+  }
+}
+
+export interface IUpdateAboutDto {
+  userId?: number;
+  about?: string | undefined;
+}
+
+export class UploadPhotoDto implements IUploadPhotoDto {
+  userId?: number;
+  photo?: FileModel;
+
+  constructor(data?: IUploadPhotoDto) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      this.userId = _data["userId"];
+      this.photo = _data["photo"] ? FileModel.fromJS(_data["photo"]) : <any>undefined;
+    }
+  }
+
+  static fromJS(data: any): UploadPhotoDto {
+    data = typeof data === 'object' ? data : {};
+    let result = new UploadPhotoDto();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    data["userId"] = this.userId;
+    data["photo"] = this.photo ? this.photo.toJSON() : <any>undefined;
+    return data;
+  }
+}
+
+export interface IUploadPhotoDto {
+  userId?: number;
+  photo?: FileModel;
+}
+
+export class UserInfo implements IUserInfo {
+  id?: number;
+  username?: string | undefined;
+  about?: string | undefined;
+  lastSeen?: Date;
+  avatarUrl?: string | undefined;
+  avatars?: string[] | undefined;
+
+  constructor(data?: IUserInfo) {
+    if (data) {
+      for (var property in data) {
+        if (data.hasOwnProperty(property))
+          (<any>this)[property] = (<any>data)[property];
+      }
+    }
+  }
+
+  init(_data?: any) {
+    if (_data) {
+      this.id = _data["id"];
+      this.username = _data["username"];
+      this.about = _data["about"];
+      this.lastSeen = _data["lastSeen"] ? new Date(_data["lastSeen"].toString()) : <any>undefined;
+      this.avatarUrl = _data["avatarUrl"];
+      if (Array.isArray(_data["avatars"])) {
+        this.avatars = [] as any;
+        for (let item of _data["avatars"])
+          this.avatars!.push(item);
+      }
+    }
+  }
+
+  static fromJS(data: any): UserInfo {
+    data = typeof data === 'object' ? data : {};
+    let result = new UserInfo();
+    result.init(data);
+    return result;
+  }
+
+  toJSON(data?: any) {
+    data = typeof data === 'object' ? data : {};
+    data["id"] = this.id;
+    data["username"] = this.username;
+    data["about"] = this.about;
+    data["lastSeen"] = this.lastSeen ? this.lastSeen.toISOString() : <any>undefined;
+    data["avatarUrl"] = this.avatarUrl;
+    if (Array.isArray(this.avatars)) {
+      data["avatars"] = [];
+      for (let item of this.avatars)
+        data["avatars"].push(item);
+    }
+    return data;
+  }
+}
+
+export interface IUserInfo {
+  id?: number;
+  username?: string | undefined;
+  about?: string | undefined;
+  lastSeen?: Date;
+  avatarUrl?: string | undefined;
+  avatars?: string[] | undefined;
 }
 
 export class UserViewModel implements IUserViewModel {

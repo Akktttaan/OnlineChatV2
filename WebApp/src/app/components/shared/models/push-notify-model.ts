@@ -5,5 +5,6 @@ export class PushNotifyModel {
   messageText: string;
   sender: Sender;
   messageDate: Date | string;
-  chatName: string
+  chatName: string;
+  avatarUrl: string
 }

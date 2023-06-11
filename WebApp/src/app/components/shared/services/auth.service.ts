@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {LoginDto, OnlineChatClient, RegisterDto} from "../../../../api/OnlineChatClient";
+import {AuthenticateResponse, LoginDto, OnlineChatClient, RegisterDto} from "../../../../api/OnlineChatClient";
 import {first, tap} from "rxjs/operators";
 import {SignalRService} from "./signalR.service";
 
@@ -9,6 +9,7 @@ import {SignalRService} from "./signalR.service";
 export class AuthService {
   private token: string | null | undefined = null;
   private tokenExpiredDate: Date;
+  public userName: string;
 
   constructor(private api: OnlineChatClient,
               private signalR: SignalRService) {
@@ -18,12 +19,13 @@ export class AuthService {
     return this.api.auth(user)
       .pipe(
         first(),
-        tap(res => {
+        tap((res: AuthenticateResponse) => {
           const expiredDate = Date.now() + (7 * 24 * 60 * 60 * 1000)
           // @ts-ignore
           localStorage.setItem('auth-token', res.token)
           // @ts-ignore
           localStorage.setItem('clientId', res.id)
+          this.userName = res.username!
           // @ts-ignore
           localStorage.setItem('tokenExpiredDate', expiredDate)
           this.setToken(res.token)
@@ -43,6 +45,7 @@ export class AuthService {
           localStorage.setItem('auth-token', res.token)
           // @ts-ignore
           localStorage.setItem('clientId', res.id)
+          this.userName = res.username!
           // @ts-ignore
           localStorage.setItem('tokenExpiredDate', expiredDate)
           this.setToken(res.token)
@@ -80,5 +83,6 @@ export class AuthService {
     this.setToken(null);
     localStorage.clear()
     this.signalR.deleteCashed()
+    this.signalR.stopConnection()
   }
 }

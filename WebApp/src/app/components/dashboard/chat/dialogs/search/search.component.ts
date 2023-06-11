@@ -5,6 +5,7 @@ import {Observable, ReplaySubject} from "rxjs";
 import {ActivatedRoute, Router} from "@angular/router";
 import {first} from "rxjs/operators";
 import {FormBuilder, ɵElement, ɵValue} from "@angular/forms";
+import {environment} from "../../../../../../environments/environment";
 
 @Component({
   selector: 'app-search',
@@ -17,6 +18,8 @@ export class SearchComponent {
   dataForm = this.builder.group({
     searchText: ['']
   })
+
+  environment = environment;
   constructor(private dialogRef: MatDialogRef<SearchComponent>,
               private api: OnlineChatClient,
               private route: ActivatedRoute,

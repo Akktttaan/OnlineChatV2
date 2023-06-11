@@ -5,4 +5,7 @@ export interface ChatModel{
   lastMessageSenderName: string;
   lastMessageText: string;
   lastMessageDate: Date | string;
+  status: boolean
+  avatarUrl: string
+  visible: boolean
 }

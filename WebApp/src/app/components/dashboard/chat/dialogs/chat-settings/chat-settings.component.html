@@ -1,5 +1,15 @@
 <div>
   <mat-dialog-content>
-    <button *ngIf="chat.id > 0" mat-button (click)="addContact()">Добавить в контакты</button>
+    <ng-container *ngIf="chat.id > 0; else group">
+      <button *ngIf="isMyFriend; else deleteFriend" mat-button (click)="addContact()">Добавить в контакты</button>
+      <ng-template #deleteFriend>
+        <button mat-button (click)="deleteContact()">Удалить контакт</button>
+      </ng-template>
+    </ng-container>
+    <ng-template #group>
+      <button *ngIf="chatOwnerId == clientId" mat-button (click)="openGroupSettings()">Настройки группы</button>
+      <button mat-button type="button" (click)="addToGroup()">Добавить в группу</button>
+      <button mat-button type="button" (click)="leaveGroup()">Покинуть группу</button>
+    </ng-template>
   </mat-dialog-content>
 </div>

@@ -1,0 +1,26 @@
+<section>
+  <div>
+    <div class="modal-header">
+      <h3>Выберите контакты</h3>
+      <button type="button" class="step-button" (click)="close()">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    </div>
+<!--    <div class="custom-search">-->
+<!--      <div class="search-icon">-->
+<!--        <i class="material-icons">search</i>-->
+<!--      </div>-->
+<!--      <input type="text" class="search-input" placeholder="Поиск">-->
+<!--    </div>-->
+    <mat-list>
+      <ng-container *ngFor="let contact of data.contacts | async">
+        <mat-list-item *ngIf="!data.isRemoveUsers || contact.userId != chatOwnerId">
+          <div class="contact-item">
+            <mat-checkbox (change)="toggleContactSelection($event, contact.userId)"/>
+            <p>{{ contact.userName }}</p>
+          </div>
+        </mat-list-item>
+      </ng-container>
+    </mat-list>
+  </div>
+</section>

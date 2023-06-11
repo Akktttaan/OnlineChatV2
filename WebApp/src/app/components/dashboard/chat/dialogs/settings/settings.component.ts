@@ -3,6 +3,7 @@ import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from "@angular/material/dialog
 import {AuthService} from "../../../../shared/services/auth.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {SearchComponent} from "../search/search.component";
+import {UserProfileComponent} from "../user-profile/user-profile.component";
 
 @Component({
   selector: 'app-settings',
@@ -39,16 +40,26 @@ export class SettingsComponent {
   }
 
   contacts() {
-      this.dialog.open(SearchComponent, {
-        width: '400px',
-        height: '600px',
-        data: {
-          clientId: this.data.clientId
-        }
+    this.dialog.open(SearchComponent, {
+      width: '400px',
+      height: '600px',
+      data: {
+        clientId: this.data.clientId
+      }
+    })
+      .afterClosed()
+      .subscribe(contact => {
+        this.dialogRef.close(contact)
       })
-        .afterClosed()
-        .subscribe(contact => {
-          this.dialogRef.close(contact)
-        })
+  }
+
+  userProfile() {
+    this.dialog.open(UserProfileComponent, {
+      width: '400px',
+      data: {
+        clientId: this.data.clientId,
+        dialogRef: this.dialogRef
+      }
+    })
   }
 }

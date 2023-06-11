@@ -23,6 +23,7 @@
     "@aspnet/signalr": "^1.0.27",
     "@ctrl/ngx-emoji-mart": "^9.2.0",
     "@microsoft/signalr": "^7.0.5",
+    "ngx-image-cropper": "^7.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "twemoji": "^13.1.1",

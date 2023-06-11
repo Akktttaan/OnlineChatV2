@@ -2,15 +2,6 @@
   <div class="chat-header">
     <h2>{{chat.name}}</h2>
     <div class="chat-header-buttons">
-      <button mat-icon-button>
-        <mat-icon>search</mat-icon>
-      </button>
-      <button mat-icon-button>
-        <mat-icon>call</mat-icon>
-      </button>
-      <button mat-icon-button>
-        <mat-icon>videocam</mat-icon>
-      </button>
       <button mat-icon-button (click)="openChatSettings()">
         <mat-icon>menu</mat-icon>
       </button>
@@ -20,19 +11,23 @@
 
   <div class="message-container" #chatList>
     <div *ngFor="let message of messages"
-         [ngClass]="{ 'incoming': message.type == 'other', 'outgoing': message.type == 'my' }">
-      <div class="avatar" *ngIf="message.type == 'other'">
+         [ngClass]="{ 'system': message.messageType == MessageType.System,
+         'incoming': message.type == 'other' && message.messageType == MessageType.Common,
+         'outgoing': message.type == 'my' && message.messageType == MessageType.Common}">
+      <div class="avatar" *ngIf="message.type == 'other' && message.messageType != MessageType.System">
         <img
-          src="https://s5o.ru/storage/simple/cyber/edt/bb/f9/38/f5/cyberef95b3ecf51.jpg"
-          alt="Аватар другого пользователя" class="avatar">
+          [src]="environment.apiUrl + '/' + (message.sender.avatarUrl ? message.sender.avatarUrl : 'userAvatar.png')"
+          alt="" class="avatar">
       </div>
       <div class="message-content">
-        <p *ngIf="message.type == 'other' && chat.id < 0" [style.color]="message.sender.nicknameColor" class="nickname">{{message.sender.username}}</p>
+        <p *ngIf="message.type == 'other' && chat.id < 0 && message.messageType != MessageType.System" [style.color]="message.sender.nicknameColor"
+           class="nickname">{{message.sender.username}}</p>
         <p>{{message.messageText}}</p>
-        <p class="message-time">{{message.messageDate | lastMessageTime}}</p>
+        <p *ngIf="message.messageType != MessageType.System" class="message-time">{{message.messageDate | lastMessageTime}}</p>
       </div>
     </div>
-    <emoji-mart class="emoji-picker-container" [darkMode]="false" *ngIf="showEmoji" title="Pick your emoji…" emoji="point_up"
+    <emoji-mart class="emoji-picker-container" [darkMode]="false" *ngIf="showEmoji" title="Pick your emoji…"
+                emoji="point_up"
                 (mouseenter)="showEmoji = true" (mouseleave)="hideEmojiPicker()"
                 (emojiClick)="onEmojiSelectBtn($event)"></emoji-mart>
   </div>
