@@ -38,7 +38,7 @@ public class ContactsService : IContactsService
     {
         return await _queryDb.UsersContacts.Where(x => x.ContactOwnerId == userId)
             .Include(x => x.Contact)
-            .Select(x => new ContactModel() { UserId = x.Contact.Id, Username = x.Contact.Username })
+            .Select(x => new ContactModel() { UserId = x.Contact.Id, Username = x.Contact.Username, PhotoUrl = x.Contact.CurrentAvatar})
             .ToArrayAsync();
     }
 

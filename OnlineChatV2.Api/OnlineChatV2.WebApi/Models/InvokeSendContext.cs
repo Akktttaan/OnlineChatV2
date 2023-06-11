@@ -7,4 +7,5 @@ public class InvokeSendContext
     public long ToChatId { get; set; }
     public string GroupId { get; set; }
     public string? AvatarUrl { get; set; }
+    public bool NotifyInvoker { get; set; } = false;
 }

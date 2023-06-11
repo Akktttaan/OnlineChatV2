@@ -16,6 +16,7 @@ public class BaseDbContext : DbContext
     public DbSet<NicknameColor> NicknameColors { get; set; }
     public DbSet<UserAvatar> UserAvatars  { get; set; }
     public DbSet<ChatAvatar> ChatAvatars  { get; set; }
+    public DbSet<MessageContent> MessageContent  { get; set; }
 
     public BaseDbContext(DbContextOptions options) : base(options)
     {

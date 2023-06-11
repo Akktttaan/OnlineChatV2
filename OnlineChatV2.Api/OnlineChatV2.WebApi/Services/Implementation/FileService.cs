@@ -3,7 +3,6 @@ using OnlineChatV2.Domain;
 using OnlineChatV2.WebApi.Models;
 using OnlineChatV2.WebApi.Services.Base;
 using OnlineChatV2.WebApi.Utilities;
-using File = OnlineChatV2.WebApi.Models.File;
 using FileIO = System.IO.File;
 
 namespace OnlineChatV2.WebApi.Services.Implementation;
@@ -26,7 +25,7 @@ public class FileService : IFileService
         return avatarPath.Replace('\\', '/');
     }
     
-    public async Task<string> UploadAvatar(long id, File photo, string rootPath, AvatarType type)
+    public async Task<string> UploadAvatar(long id, FileModel photo, string rootPath, AvatarType type)
     {
         var guid = id + "-" + Guid.NewGuid();
         var extension = Path.GetExtension(photo.Name.Trim('"'));
@@ -39,5 +38,13 @@ public class FileService : IFileService
         var bytes = Convert.FromBase64String(photo.Data);
         await FileIO.WriteAllBytesAsync(fullPath, bytes);
         return avatarPath.Replace('\\', '/');
+    }
+
+    public async Task<string> SaveFile(FileModel fileModel, string rootPath)
+    {
+        var fullPath = Path.Combine(rootPath, "files", fileModel.Name);
+        var bytes = Convert.FromBase64String(fileModel.Data);
+        await FileIO.WriteAllBytesAsync(fullPath, bytes);
+        return fullPath.Replace('\\', '/');
     }
 }

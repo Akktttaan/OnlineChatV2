@@ -51,9 +51,8 @@ public class UserService : IUserService
         {
             Password = hash,
             Email = dto.Email,
-            Username = dto.Password,
+            Username = dto.Username,
             NicknameColor = color.Hex,
-            About = dto.About
         };
         await users.AddAsync(user);
         await _commandDb.SaveChangesAsync();
@@ -149,7 +148,7 @@ public class UserService : IUserService
         await _commandDb.SaveChangesAsync();
     }
 
-    public async Task UploadPhoto(long userId, IFormFile photo, IWebHostEnvironment env)
+    public async Task UploadPhoto(long userId, FileModel photo, IWebHostEnvironment env)
     {
         var user = await _queryDb.Users.FirstOrError<User, ArgumentException>(x => x.Id == userId,
             "Пользователь не найден");

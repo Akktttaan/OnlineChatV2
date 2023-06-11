@@ -1,0 +1,7 @@
+﻿{
+    "Extensions": {
+      "Picture": ["jpg", "jpeg", "png", "bmp", "svg", "webp"],
+      "Video": ["mp4", "mov", "avi", "mkv", "wmv", "flv", "webm", "3gp"],
+      "Gif": ["gif"] 
+  }
+}

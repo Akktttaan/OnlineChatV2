@@ -60,7 +60,7 @@ public class User
     /// <summary>
     /// О себе
     /// </summary>
-    public string About { get; set; }
+    public string? About { get; set; }
     
     public string? CurrentAvatar { get; set; }
     public ICollection<UserAvatar> UserAvatars { get; set; }

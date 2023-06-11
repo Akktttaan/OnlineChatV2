@@ -22,5 +22,5 @@ public interface IUserService
 
     Task<UserInfo> GetUserInfo(long userId);
     Task UpdateAbout(long userId, string about);
-    Task UploadPhoto(long userId, IFormFile photo, IWebHostEnvironment en);
+    Task UploadPhoto(long userId, FileModel photo, IWebHostEnvironment en);
 }
