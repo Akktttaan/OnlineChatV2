@@ -24,7 +24,9 @@ public interface IChatService
     Task MoveUserInChat(long chatId, long userId, ChatAction action);
     Task<MessageDto> GenerateChatActionMessage(BaseActionContext context, ChatAction action);
     Task<bool> IsHavePermission(long userId, long chatId);
-    Task UploadAvatar(long chatId, IFormFile photo, IWebHostEnvironment env);
+    Task<string> UploadAvatar(long chatId, IFormFile photo);
+    Task<string> UploadAvatar(long chatId, FileModel photo);
     Task ChangeName(long chatId, string newName);
     Task UpdateAbout(long chatId, string about);
+    Task<string?> GetChatAvatar(long chatId);
 }

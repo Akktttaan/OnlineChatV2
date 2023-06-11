@@ -14,12 +14,17 @@ public class ChatService : IChatService
     private readonly QueryDbContext _queryDb;
     private readonly CommandDbContext _commandDb;
     private readonly IFileService _fileService;
+    private readonly IWebHostEnvironment _env;
+    private readonly ContentTypeDetector _detector;
 
-    public ChatService(QueryDbContext queryDb, CommandDbContext commandDb, IFileService fileService)
+    public ChatService(QueryDbContext queryDb, CommandDbContext commandDb, IFileService fileService,
+        IWebHostEnvironment env, ContentTypeDetector detector)
     {
         _queryDb = queryDb;
         _commandDb = commandDb;
         _fileService = fileService;
+        _env = env;
+        _detector = detector;
     }
 
     public ChatType GetChatType(long chatId)
@@ -45,15 +50,28 @@ public class ChatService : IChatService
     {
         if (await _commandDb.Users.FindAsync(model.CreatedById) == null)
             throw new ArgumentException("Not valid owner id");
-        
         var chat = new Chat
         {
             Name = model.ChatName,
             OwnerId = model.CreatedById,
-            Description = model.ChatName
+            Description = model.Description
         };
         await _commandDb.AddAsync(chat);
         await _commandDb.SaveChangesAsync();
+        string? url = null;
+        if (model.Avatar != null)
+        {
+            url = await _fileService.UploadAvatar(chat.Id, model.Avatar, _env.WebRootPath, AvatarType.Chat);
+            chat.CurrentAvatar = url;
+            var chatAvatar = new ChatAvatar()
+            {
+                ChatId = chat.Id,
+                AvatarUrl = url
+            };
+            await _commandDb.ChatAvatars.AddAsync(chatAvatar);
+            _commandDb.Chats.Update(chat);
+            await _commandDb.SaveChangesAsync();
+        }
         
         var chatUsers = new LinkedList<ChatUser>();
         foreach (var userId in model.ChatUserIds)
@@ -75,7 +93,8 @@ public class ChatService : IChatService
         {
             Id = chat.Id,
             WhoAdded = chatUsers.Select(x => x.UserId),
-            Description = model.Description
+            Description = model.Description,
+            AvatarUrl = url
         };
     }
 
@@ -103,7 +122,8 @@ public class ChatService : IChatService
         var chatsWithLastMessage = (from chat in userChats
             join lastMessage in lastMessageFromChats on chat.Id equals lastMessage.ChatId into lastMessageGroup
             from lastMessage in lastMessageGroup.DefaultIfEmpty()
-            join fullMessage in _queryDb.Messages.Include(x => x.FromUser) on lastMessage.MessageId equals fullMessage.Id into fullMessageGroup
+            join fullMessage in _queryDb.Messages.Include(x => x.FromUser).Include(x => x.MessageContent) 
+                on lastMessage.MessageId equals fullMessage.Id into fullMessageGroup
             from fullMessage in fullMessageGroup.DefaultIfEmpty()
             select new ChatModel()
             {
@@ -113,7 +133,9 @@ public class ChatService : IChatService
                 LastMessageFromSender = fullMessage.FromUserId == userId,
                 LastMessageSenderName = fullMessage.FromUser.Username,
                 LastMessageText = fullMessage.MessageText,
-                AvatarUrl = chat.AvatarUrl
+                AvatarUrl = chat.AvatarUrl,
+                LastMessageWithContent = fullMessage.MessageContent == null,
+                LastMessageContentType = fullMessage.MessageContent == null ? null : (ContentType)fullMessage.MessageContent.ContentTypeId
             });
         
         var lastMessageFromPm = from m in fr.Union(to)
@@ -121,7 +143,8 @@ public class ChatService : IChatService
             select new { PrivateChatId = g.Key, MessageId = g.Max(m => m.Id) };
 
         var pmsWithLastMessages = from chat in lastMessageFromPm
-            join lastmessage in _queryDb.Messages on chat.MessageId equals lastmessage.Id
+            join lastmessage in _queryDb.Messages.Include(x => x.MessageContent) 
+                on chat.MessageId equals lastmessage.Id
             join user in _queryDb.Users on chat.PrivateChatId equals user.Id
             select new ChatModel()
             {
@@ -131,7 +154,9 @@ public class ChatService : IChatService
                 LastMessageFromSender = lastmessage.FromUserId == userId,
                 LastMessageSenderName = null,
                 LastMessageText = lastmessage.MessageText,
-                AvatarUrl = user.CurrentAvatar
+                AvatarUrl = user.CurrentAvatar,
+                LastMessageWithContent = lastmessage.MessageContent == null,
+                LastMessageContentType = lastmessage.MessageContent == null ? null : (ContentType)lastmessage.MessageContent.ContentTypeId
             };
 
         return await chatsWithLastMessage.Union(pmsWithLastMessages)
@@ -170,11 +195,15 @@ public class ChatService : IChatService
     private async Task<ChatHistoryModel[]> MapHistory(IQueryable<Message> filteredHistory)
     {
         return await filteredHistory.Include(x => x.FromUser)
+            .Include(x => x.MessageContent)
             .Select(x => new ChatHistoryModel
             {
                 MessageId = x.Id,
                 MessageText = x.MessageText,
                 MessageDate = x.MessageDate,
+                MessageType = x.MessageType,
+                ContentPath = x.MessageContent == null ? string.Empty : x.MessageContent.ContentPath,
+                ContentType = x.MessageContent == null ? null : x.MessageContent.ContentType,
                 Sender = new SenderModel
                 {
                     UserId = x.FromUserId,
@@ -205,10 +234,9 @@ public class ChatService : IChatService
             entry.ChatId = message.ChatId;
             chatName = (await _commandDb.Chats.FindAsync(message.ChatId))?.Name;
         }
-
         await _commandDb.AddAsync(entry);
         await _commandDb.SaveChangesAsync();
-        return new ChatHistoryModel()
+        var result = new ChatHistoryModel()
         {
             MessageText = entry.MessageText,
             MessageDate = entry.MessageDate,
@@ -223,6 +251,24 @@ public class ChatService : IChatService
                 NicknameColor = user.NicknameColor
             }
         };
+        if (message.Content != null)
+        {
+            var contentType = _detector.GetContentType(message.Content.Name);
+            var filePath = await _fileService.SaveFile(message.Content, _env.WebRootPath);
+            var content = new MessageContent()
+            {
+                MessageId = entry.Id,
+                ContentType = contentType,
+                ContentPath = filePath
+            };
+            await _commandDb.MessageContent.AddAsync(content);
+            await _commandDb.SaveChangesAsync();
+            result.MessageType = MessageType.WithContent;
+            result.ContentType = contentType;
+            result.ContentPath = filePath;
+        }
+
+        return result;
     }
 
     public async Task<ChatInfo> GetChatInfo(long chatId)
@@ -292,13 +338,13 @@ public class ChatService : IChatService
         var chatUser = await _commandDb.ChatUsers.FirstOrDefaultAsync(x => x.UserId == userId && x.ChatId == chatId);
         if (chatUser == null)
             return;
-        _commandDb.Remove(chatUser);
+        _commandDb.ChatUsers.Remove(chatUser);
         await _commandDb.SaveChangesAsync();
     }
 
     public async Task<MessageDto> GenerateChatActionMessage(BaseActionContext context, ChatAction action)
     {
-        var result = string.Empty;
+        string result;
         switch (action)
         {
             case ChatAction.RemoveUser:
@@ -317,6 +363,11 @@ public class ChatService : IChatService
                 result = $"{leaveTarget.Username} {action.GetEnumInfo()}";
                 break;
             case ChatAction.ChangeGroup:
+                if (context is not ChangeNameActionContext changeNameContext)
+                    throw new Exception("Некорректный контекст");
+                result = $"{context.Invoker.Username} {action.GetEnumInfo()} {changeNameContext.NewName}";
+                break;
+            case  ChatAction.ChangeAvatar:
                 result = $"{context.Invoker.Username} {action.GetEnumInfo()}";
                 break;
             default:
@@ -330,11 +381,11 @@ public class ChatService : IChatService
         };
     }
     
-    public async Task UploadAvatar(long chatId, IFormFile photo, IWebHostEnvironment env)
+    public async Task<string> UploadAvatar(long chatId, IFormFile photo)
     {
         var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId,
             "Пользователь не найден");
-        var avatarPath = await _fileService.UploadAvatar(chatId, photo, env.WebRootPath, AvatarType.User);
+        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.Chat);
         var avatar = new ChatAvatar()
         {
             AvatarUrl = avatarPath,
@@ -345,6 +396,24 @@ public class ChatService : IChatService
         chat.CurrentAvatar = avatar.AvatarUrl;
         _commandDb.Chats.Update(chat);
         await _commandDb.SaveChangesAsync();
+        return avatar.AvatarUrl;
+    }
+    
+    public async Task<string> UploadAvatar(long chatId, FileModel photo)
+    {
+        var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId, "Пользователь не найден");
+        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.Chat);
+        var avatar = new ChatAvatar()
+        {
+            AvatarUrl = avatarPath,
+            ChatId = chatId
+        };
+        await _commandDb.ChatAvatars.AddAsync(avatar);
+        await _commandDb.SaveChangesAsync();
+        chat.CurrentAvatar = avatar.AvatarUrl;
+        _commandDb.Entry(chat).State = EntityState.Modified;
+        await _commandDb.SaveChangesAsync();
+        return avatar.AvatarUrl;
     }
     
     public async Task UpdateAbout(long chatId, string about)
@@ -363,5 +432,11 @@ public class ChatService : IChatService
         chat.Name = newName;
         _commandDb.Chats.Update(chat);
         await _commandDb.SaveChangesAsync();
+    }
+    
+    public async Task<string?> GetChatAvatar(long chatId)
+    {
+        return (await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId, "Чат не найден"))
+            .CurrentAvatar;
     }
 }

@@ -7,8 +7,12 @@ using OnlineChatV2.WebApi.Infrastructure.Middlewares;
 using OnlineChatV2.WebApi.Services;
 using OnlineChatV2.WebApi.Services.Base;
 using OnlineChatV2.WebApi.Services.Implementation;
+using OnlineChatV2.WebApi.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
+var additConfig =  new ConfigurationBuilder()
+    .AddJsonFile("mediaextensions.json").Build();
+builder.Configuration.AddConfiguration(additConfig);
 
 // Add services to the container.
 
@@ -21,6 +25,7 @@ builder.Services
     .AddDatabase(builder.Configuration)
     .AddAuth()
     .AddSingleton<EventBus>()
+    .AddSingleton<ContentTypeDetector>()
     .AddTransient<IChatService, ChatService>()
     .AddScoped<IContactsService, ContactsService>()
     .AddSingleton<IChatHubStore, ChatHubStore>()
@@ -30,6 +35,7 @@ builder.Services
     .AddHubOptions<ChatHub>(options =>
     {
         options.AddFilter<AuthHubFilter>();
+        options.MaximumReceiveMessageSize = long.MaxValue;
     });
 
 

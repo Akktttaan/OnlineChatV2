@@ -73,10 +73,11 @@ public class ChatHub : BaseChatHub
         _store.AddUserToGroup(Context.ConnectionId, groupId);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-
-        await Clients.Caller.SendAsync("SetChatHistory", await _chatService.GetChat(user.Id, chatId));
+        var history = await _chatService.GetChat(user.Id, chatId);
+        await Clients.Caller.SendAsync("SetChatHistory", history);
         if(_chatService.GetChatType(chatId) == ChatType.Group)
-            await Clients.Caller.SendAsync("SetChatInfo", await _chatService.GetChatInfo(chatId));
+            await Clients.Group(groupId).SendAsync("SetChatInfo", await _chatService.GetChatInfo(chatId),
+                _chatService.IsHavePermission(user.Id, chatId));
         if (_chatService.GetChatType(chatId) == ChatType.Personal)
             await Clients.Caller.SendAsync("SetUserInfo", await _userService.GetUserInfo(chatId));
     }
@@ -90,45 +91,67 @@ public class ChatHub : BaseChatHub
         var result = await _chatService.SaveMessage(user, message);
 
         var fromId = _chatService.GetChatType(message.ChatId) == ChatType.Group ? message.ChatId : user.Id;
-        await InvokeSendOnClients(new InvokeSendContext()
+        await InvokeSendOnClients(new InvokeSendContext
         {
             FromId = fromId,
             GroupId = groupId,
             Message = result,
-            ToChatId = message.ChatId
+            ToChatId = message.ChatId,
+            AvatarUrl = _chatService.GetChatType(message.ChatId) == ChatType.Group
+                ? await _chatService.GetChatAvatar(message.ChatId)
+                : user.CurrentAvatar,
+            NotifyInvoker = false
         });
     }
 
-    public async Task AddUser(long chatId, long userId)
+    public async Task AddUser(long chatId, IEnumerable<long> userIds)
     {
         var user = GetUserFromContext(HttpContext);
-        if(_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
-            await InvokeActionOnClients(new UserMoveActionContext
+        foreach (var userId in userIds)
+        {
+            await _chatService.MoveUserInChat(chatId, userId, ChatAction.AddUser);
+            if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
             {
-               ChatId = chatId,
-               Invoker = user,
-               TargetId = userId
-            }, ChatAction.AddUser);
-        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.AddUser);
+                var connId = _store.GetUserConnectionId(userId);
+                if (connId != null)
+                {
+                    _store.AddUserToGroup(connId, groupId);
+                    await Groups.AddToGroupAsync(connId, groupId);
+                }
+                await InvokeActionOnClients(new UserMoveActionContext
+                {
+                    ChatId = chatId,
+                    Invoker = user,
+                    TargetId = userId
+                }, ChatAction.AddUser);
+            }
 
+        }
     }
 
-    public async Task RemoveUser(long chatId, long userId) 
+    public async Task RemoveUser(long chatId, long[] userIds) 
     {
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
             throw new AuthenticationException("Нет прав для удаления");
-        if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+        foreach (var userId in userIds)
         {
-            await InvokeActionOnClients(new UserMoveActionContext
+            if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
             {
-                ChatId = chatId,
-                Invoker = user,
-                TargetId = userId
-            }, ChatAction.RemoveUser);
-            _store.RemoveUserFromGroup(userId, groupId);   
+                await InvokeActionOnClients(new UserMoveActionContext
+                {
+                    ChatId = chatId,
+                    Invoker = user,
+                    TargetId = userId
+                }, ChatAction.RemoveUser);
+                _store.RemoveUserFromGroup(userId, groupId);
+                var connId = _store.GetUserConnectionId(userId);
+                if (connId != null)
+                    await Clients.Client(connId).SendAsync("KickedFromChat", chatId);
+                await Clients.Group(groupId).SendAsync("UserRemoved", userId, chatId);
+            }
+            await _chatService.MoveUserInChat(chatId, userId, ChatAction.RemoveUser);
         }
-        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.RemoveUser);
     }
 
     public async Task LeaveChat(long chatId)
@@ -141,8 +164,9 @@ public class ChatHub : BaseChatHub
                 ChatId = chatId,
                 Invoker = user,
                 TargetId = user.Id
-            }, ChatAction.UserLeave);
+            }, ChatAction.UserLeave, false);
             _store.RemoveUserFromGroup(user.Id, groupId);
+            await Clients.Group(groupId).SendAsync("UserRemoved", user.Id, chatId);
         }
         await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.UserLeave);
     }
@@ -152,6 +176,7 @@ public class ChatHub : BaseChatHub
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
             throw new AuthenticationException("Нет прав");
+        await _chatService.ChangeName(chatId, newName);
         if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
         {
             await InvokeActionOnClients(new ChangeNameActionContext()
@@ -160,15 +185,16 @@ public class ChatHub : BaseChatHub
                 Invoker = user,
                 NewName = newName,
             }, ChatAction.ChangeGroup);
+            await Clients.Group(groupId).SendAsync("SetChatName", chatId, newName);
         }
-        await _chatService.ChangeName(chatId, newName);
     }
 
-    public async Task ChangeChatAvatar(long chatId, IFormFile photo)
+    public async Task ChangeChatAvatar(long chatId, FileModel photo)
     {
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
             throw new AuthenticationException("Нет прав");
+        var newUrl = await _chatService.UploadAvatar(chatId, photo);
         if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
         {
             await InvokeActionOnClients(new BaseActionContext()
@@ -176,9 +202,9 @@ public class ChatHub : BaseChatHub
                 ChatId = chatId,
                 Invoker = user,
             }, ChatAction.ChangeAvatar);
+            await Clients.Group(groupId).SendAsync("SetChatAvatar", newUrl);
         }
-
-        await _chatService.UploadAvatar(chatId, photo, _environment);
+        
     }
     
     public async Task UpdateAbout(long chatId, string about)
@@ -188,12 +214,12 @@ public class ChatHub : BaseChatHub
             throw new AuthenticationException("Нет прав");
         if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
         {
-            await Clients.Group(groupId).SendAsync("AboutChanged", about);
+            await Clients.Group(groupId).SendAsync("AboutChanged", chatId, about);
         }
         await _chatService.UpdateAbout(chatId, about);
     }
 
-    private async Task InvokeActionOnClients(BaseActionContext context, ChatAction action)
+    private async Task InvokeActionOnClients(BaseActionContext context, ChatAction action, bool notifyInvoker = true)
     {
         var groupId = await ValidateChatConnect(_chatService, context.ChatId);
         if (groupId == null) return;
@@ -203,19 +229,27 @@ public class ChatHub : BaseChatHub
         var result = await _chatService.SaveMessage(context.Invoker, dto, MessageType.System);
         await InvokeSendOnClients(new InvokeSendContext()
         {
-            FromId = context.Invoker.Id,
+            FromId = context.ChatId,
             GroupId = groupId,
             Message = result,
-            ToChatId = context.ChatId
+            ToChatId = context.ChatId,
+            AvatarUrl = await _chatService.GetChatAvatar(context.ChatId),
+            NotifyInvoker = notifyInvoker // оповещаем в т.ч того кто вызвал
         });
     }
-    
+
     private async Task InvokeSendOnClients(InvokeSendContext context)
     {
-        await Clients.OthersInGroup(context.GroupId).SendAsync("ReceiveMessage",
+        if (context.NotifyInvoker)
+        {
+            await Clients.Group(context.GroupId).SendAsync("ReceiveMessage",
+                context.FromId, context.Message);
+        }
+        else
+            await Clients.OthersInGroup(context.GroupId).SendAsync("ReceiveMessage",
             context.FromId, context.Message);
         await Clients.Caller.SendAsync("MessageDelivered", context.Message.MessageDate);
-
+        await Clients.Others.SendAsync("UserOnline", context.Message.Sender.UserId);
         var clientsForNotify = new List<string>();
         if (_chatService.GetChatType(context.ToChatId) == ChatType.Personal)
         {
@@ -226,7 +260,8 @@ public class ChatHub : BaseChatHub
         }
         else
         {
-            clientsForNotify.AddRange(_store.GetGroupMembers(context.GroupId).Where(x => x != Context.ConnectionId));
+            clientsForNotify.AddRange(_store.GetGroupMembers(context.GroupId)
+                .Where(x => x != Context.ConnectionId || context.NotifyInvoker));
         }
 
         foreach (var clientId in clientsForNotify)
@@ -236,7 +271,8 @@ public class ChatHub : BaseChatHub
                 MessageText = context.Message.MessageText,
                 MessageDate = context.Message.MessageDate,
                 Sender = context.Message.Sender,
-                ChatName = context.Message.ChatName
+                ChatName = context.Message.ChatName,
+                AvatarUrl = context.AvatarUrl
             });
     }
 
@@ -268,7 +304,8 @@ public class ChatHub : BaseChatHub
                 ChatName = model.ChatName,
                 MessageDate = infoResult.MessageDate,
                 MessageText = infoResult.MessageText,
-                Sender = infoResult.Sender
+                Sender = infoResult.Sender,
+                AvatarUrl = result.AvatarUrl
             });
         }
     }
@@ -336,5 +373,5 @@ public class ChatHub : BaseChatHub
                 return null;
         }
     }
-    
+
 }

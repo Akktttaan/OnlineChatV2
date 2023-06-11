@@ -62,4 +62,6 @@ public class Message
         get => (MessageType)MessageTypeId;
         set => MessageTypeId = (int)value;
     }
+    
+    public MessageContent? MessageContent { get; set; }
 }

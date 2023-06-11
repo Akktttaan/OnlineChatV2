@@ -38,7 +38,7 @@ public class ContactsService : IContactsService
     {
         return await _queryDb.UsersContacts.Where(x => x.ContactOwnerId == userId)
             .Include(x => x.Contact)
-            .Select(x => new ContactModel() { UserId = x.Contact.Id, Username = x.Contact.Username })
+            .Select(x => new ContactModel() { UserId = x.Contact.Id, UserName = x.Contact.Username, PhotoUrl = x.Contact.CurrentAvatar})
             .ToArrayAsync();
     }
 
@@ -55,7 +55,7 @@ public class ContactsService : IContactsService
     {
         return await _queryDb.Users
             .Where(u => EF.Functions.Like(u.Username.ToLower(), "%" + searchString.ToLower() + "%"))
-            .Select(x => new ContactModel() { UserId = x.Id, Username = x.Username, PhotoUrl = x.CurrentAvatar})
+            .Select(x => new ContactModel() { UserId = x.Id, UserName = x.Username, PhotoUrl = x.CurrentAvatar})
             .ToArrayAsync();
     }
 
@@ -71,7 +71,7 @@ public class ContactsService : IContactsService
                 from subUsers in gj.DefaultIfEmpty()
                 where subUsers == null
                 select new ContactModel
-                    { Username = contact.Contact.Username, UserId = contact.Contact.Id, PhotoUrl = contact.Contact.CurrentAvatar })
+                    { UserName = contact.Contact.Username, UserId = contact.Contact.Id, PhotoUrl = contact.Contact.CurrentAvatar })
             .ToArrayAsync();
 
     }

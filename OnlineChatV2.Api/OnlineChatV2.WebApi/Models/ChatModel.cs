@@ -1,4 +1,6 @@
-﻿namespace OnlineChatV2.WebApi.Models;
+﻿using OnlineChatV2.Domain.Enums;
+
+namespace OnlineChatV2.WebApi.Models;
 
 public class ChatModel
 {
@@ -9,4 +11,6 @@ public class ChatModel
     public string LastMessageText { get; set; }
     public DateTime? LastMessageDate { get; set; }
     public string AvatarUrl { get; set; }
+    public bool LastMessageWithContent { get; set; }
+    public ContentType? LastMessageContentType { get; set; }
 }

@@ -405,4 +405,10 @@ WebApp/typings
 WebApp/.DS_Store
 WebApp/Thumbs.db
 OnlineChatV2.Api/.idea
-OnlineChatV2.Api/appsettings.json
+OnlineChatV2.Api/OnlineChatV2.WebApi/appsettings.json
+OnlineChatV2.Api/OnlineChatV2.WebApi/wwwroot/chatAvatars/*.jpg
+OnlineChatV2.Api/OnlineChatV2.WebApi/wwwroot/chatAvatars/*.png
+OnlineChatV2.Api/OnlineChatV2.WebApi/wwwroot/chatAvatars/*.jpeg
+OnlineChatV2.Api/OnlineChatV2.WebApi/wwwroot/userAvatars/*.jpg
+OnlineChatV2.Api/OnlineChatV2.WebApi/wwwroot/userAvatars/*.png
+OnlineChatV2.Api/OnlineChatV2.WebApi/wwwroot/userAvatars/*.jpeg

@@ -4,4 +4,5 @@ public class MessageDto
 {
     public long ChatId { get; set; }
     public string MessageText { get; set; }
+    public FileModel? Content { get; set; }
 }

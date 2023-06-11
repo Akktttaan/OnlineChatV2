@@ -34,7 +34,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\" />
+      <Folder Include="wwwroot\chatAvatars\" />
+      <Folder Include="wwwroot\userAvatars\" />
     </ItemGroup>
 
 </Project>

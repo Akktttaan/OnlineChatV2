@@ -3,5 +3,5 @@
 public class UploadPhotoDto
 {
     public long UserId { get; set; }
-    public IFormFile Photo { get; set; }
+    public FileModel Photo { get; set; }
 }

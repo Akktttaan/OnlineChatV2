@@ -10,12 +10,14 @@ public class ChatHistoryModel
     public DateTime MessageDate { get; set; }
     public string? ChatName { get; set; }
     public MessageType MessageType { get; set; }
+    public string? ContentPath { get; set; }
+    public ContentType? ContentType { get; set; }
 }
 
 public class SenderModel
 {
     public long UserId { get; set; }
     public string Username { get; set; }
-    public string AvatarUrl { get; set; }
+    public string? AvatarUrl { get; set; }
     public string NicknameColor { get; set; }
 }
