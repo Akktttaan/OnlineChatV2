@@ -62,7 +62,7 @@ public class User
     /// </summary>
     public string About { get; set; }
     
-    public string CurrentAvatar { get; set; }
+    public string? CurrentAvatar { get; set; }
     public ICollection<UserAvatar> UserAvatars { get; set; }
 
     public UserAvatar GetLastAvatar()

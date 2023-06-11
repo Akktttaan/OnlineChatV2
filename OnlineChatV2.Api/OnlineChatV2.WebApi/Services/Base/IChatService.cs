@@ -2,6 +2,7 @@
 using OnlineChatV2.Domain.Enums;
 using OnlineChatV2.WebApi.Models;
 using OnlineChatV2.WebApi.Models.ActionContexts;
+using File = OnlineChatV2.WebApi.Models.File;
 
 namespace OnlineChatV2.WebApi.Services.Base;
 
@@ -24,7 +25,9 @@ public interface IChatService
     Task MoveUserInChat(long chatId, long userId, ChatAction action);
     Task<MessageDto> GenerateChatActionMessage(BaseActionContext context, ChatAction action);
     Task<bool> IsHavePermission(long userId, long chatId);
-    Task UploadAvatar(long chatId, IFormFile photo, IWebHostEnvironment env);
+    Task UploadAvatar(long chatId, IFormFile photo);
+    Task UploadAvatar(long chatId, File photo);
     Task ChangeName(long chatId, string newName);
     Task UpdateAbout(long chatId, string about);
+    Task<string?> GetChatAvatar(long chatId);
 }

@@ -8,6 +8,7 @@ using OnlineChatV2.WebApi.Models;
 using OnlineChatV2.WebApi.Models.ActionContexts;
 using OnlineChatV2.WebApi.Services.Base;
 using OnlineChatV2.WebApi.Utilities;
+using File = OnlineChatV2.WebApi.Models.File;
 
 namespace OnlineChatV2.WebApi.Hubs;
 
@@ -73,8 +74,8 @@ public class ChatHub : BaseChatHub
         _store.AddUserToGroup(Context.ConnectionId, groupId);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
-
-        await Clients.Caller.SendAsync("SetChatHistory", await _chatService.GetChat(user.Id, chatId));
+        var history = await _chatService.GetChat(user.Id, chatId);
+        await Clients.Caller.SendAsync("SetChatHistory", history);
         if(_chatService.GetChatType(chatId) == ChatType.Group)
             await Clients.Caller.SendAsync("SetChatInfo", await _chatService.GetChatInfo(chatId));
         if (_chatService.GetChatType(chatId) == ChatType.Personal)
@@ -99,18 +100,20 @@ public class ChatHub : BaseChatHub
         });
     }
 
-    public async Task AddUser(long chatId, long userId)
+    public async Task AddUser(long chatId, IEnumerable<long> userIds)
     {
         var user = GetUserFromContext(HttpContext);
-        if(_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
-            await InvokeActionOnClients(new UserMoveActionContext
-            {
-               ChatId = chatId,
-               Invoker = user,
-               TargetId = userId
-            }, ChatAction.AddUser);
-        await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.AddUser);
-
+        foreach (var userId in userIds)
+        {
+            if(_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
+                await InvokeActionOnClients(new UserMoveActionContext
+                {
+                    ChatId = chatId,
+                    Invoker = user,
+                    TargetId = userId
+                }, ChatAction.AddUser);
+            await _chatService.MoveUserInChat(chatId, user.Id, ChatAction.AddUser);   
+        }
     }
 
     public async Task RemoveUser(long chatId, long userId) 
@@ -152,6 +155,7 @@ public class ChatHub : BaseChatHub
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
             throw new AuthenticationException("Нет прав");
+        await _chatService.ChangeName(chatId, newName);
         if (_store.TryGetGroupId(chatId, out var groupId) && groupId != null)
         {
             await InvokeActionOnClients(new ChangeNameActionContext()
@@ -160,11 +164,11 @@ public class ChatHub : BaseChatHub
                 Invoker = user,
                 NewName = newName,
             }, ChatAction.ChangeGroup);
+            await Clients.Group(groupId).SendAsync("SetChatName", chatId, newName);
         }
-        await _chatService.ChangeName(chatId, newName);
     }
 
-    public async Task ChangeChatAvatar(long chatId, IFormFile photo)
+    public async Task ChangeChatAvatar(long chatId, File photo)
     {
         var user = GetUserFromContext(HttpContext);
         if (!await _chatService.IsHavePermission(user.Id, chatId))
@@ -178,7 +182,7 @@ public class ChatHub : BaseChatHub
             }, ChatAction.ChangeAvatar);
         }
 
-        await _chatService.UploadAvatar(chatId, photo, _environment);
+        await _chatService.UploadAvatar(chatId, photo);
     }
     
     public async Task UpdateAbout(long chatId, string about)
@@ -206,7 +210,8 @@ public class ChatHub : BaseChatHub
             FromId = context.Invoker.Id,
             GroupId = groupId,
             Message = result,
-            ToChatId = context.ChatId
+            ToChatId = context.ChatId,
+            AvatarUrl = await _chatService.GetChatAvatar(context.ChatId)
         });
     }
     
@@ -215,7 +220,7 @@ public class ChatHub : BaseChatHub
         await Clients.OthersInGroup(context.GroupId).SendAsync("ReceiveMessage",
             context.FromId, context.Message);
         await Clients.Caller.SendAsync("MessageDelivered", context.Message.MessageDate);
-
+        await Clients.Others.SendAsync("UserOnline", context.Message.Sender.UserId);
         var clientsForNotify = new List<string>();
         if (_chatService.GetChatType(context.ToChatId) == ChatType.Personal)
         {
@@ -268,7 +273,8 @@ public class ChatHub : BaseChatHub
                 ChatName = model.ChatName,
                 MessageDate = infoResult.MessageDate,
                 MessageText = infoResult.MessageText,
-                Sender = infoResult.Sender
+                Sender = infoResult.Sender,
+                AvatarUrl = result.AvatarUrl
             });
         }
     }
@@ -336,5 +342,5 @@ public class ChatHub : BaseChatHub
                 return null;
         }
     }
-    
+
 }

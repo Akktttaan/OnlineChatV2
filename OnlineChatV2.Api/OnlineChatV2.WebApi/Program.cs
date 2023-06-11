@@ -30,6 +30,7 @@ builder.Services
     .AddHubOptions<ChatHub>(options =>
     {
         options.AddFilter<AuthHubFilter>();
+        options.MaximumReceiveMessageSize = long.MaxValue;
     });
 
 

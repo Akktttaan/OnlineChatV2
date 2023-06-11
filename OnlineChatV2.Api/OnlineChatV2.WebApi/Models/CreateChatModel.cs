@@ -6,4 +6,5 @@ public class CreateChatModel
     public long[] ChatUserIds { get; set; }
     public string ChatName { get; set; }
     public string Description { get; set; }
+    public File? Avatar { get; set; }
 }

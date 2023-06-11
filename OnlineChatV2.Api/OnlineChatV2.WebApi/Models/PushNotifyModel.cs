@@ -7,4 +7,5 @@ public class PushNotifyModel
     public SenderModel Sender { get; set; }
     public DateTime MessageDate { get; set; }
     public string? ChatName { get; set; }
+    public string? AvatarUrl { get; set; }
 }

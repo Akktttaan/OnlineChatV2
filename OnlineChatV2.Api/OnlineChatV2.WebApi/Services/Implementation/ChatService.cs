@@ -6,6 +6,7 @@ using OnlineChatV2.WebApi.Models;
 using OnlineChatV2.WebApi.Models.ActionContexts;
 using OnlineChatV2.WebApi.Services.Base;
 using OnlineChatV2.WebApi.Utilities;
+using File = OnlineChatV2.WebApi.Models.File;
 
 namespace OnlineChatV2.WebApi.Services.Implementation;
 
@@ -14,12 +15,15 @@ public class ChatService : IChatService
     private readonly QueryDbContext _queryDb;
     private readonly CommandDbContext _commandDb;
     private readonly IFileService _fileService;
+    private readonly IWebHostEnvironment _env;
 
-    public ChatService(QueryDbContext queryDb, CommandDbContext commandDb, IFileService fileService)
+    public ChatService(QueryDbContext queryDb, CommandDbContext commandDb, IFileService fileService,
+        IWebHostEnvironment env)
     {
         _queryDb = queryDb;
         _commandDb = commandDb;
         _fileService = fileService;
+        _env = env;
     }
 
     public ChatType GetChatType(long chatId)
@@ -45,15 +49,28 @@ public class ChatService : IChatService
     {
         if (await _commandDb.Users.FindAsync(model.CreatedById) == null)
             throw new ArgumentException("Not valid owner id");
-        
         var chat = new Chat
         {
             Name = model.ChatName,
             OwnerId = model.CreatedById,
-            Description = model.ChatName
+            Description = model.Description
         };
         await _commandDb.AddAsync(chat);
         await _commandDb.SaveChangesAsync();
+        string? url = null;
+        if (model.Avatar != null)
+        {
+            url = await _fileService.UploadAvatar(chat.Id, model.Avatar, _env.WebRootPath, AvatarType.Chat);
+            chat.CurrentAvatar = url;
+            var chatAvatar = new ChatAvatar()
+            {
+                ChatId = chat.Id,
+                AvatarUrl = url
+            };
+            await _commandDb.ChatAvatars.AddAsync(chatAvatar);
+            _commandDb.Chats.Update(chat);
+            await _commandDb.SaveChangesAsync();
+        }
         
         var chatUsers = new LinkedList<ChatUser>();
         foreach (var userId in model.ChatUserIds)
@@ -75,7 +92,8 @@ public class ChatService : IChatService
         {
             Id = chat.Id,
             WhoAdded = chatUsers.Select(x => x.UserId),
-            Description = model.Description
+            Description = model.Description,
+            AvatarUrl = url
         };
     }
 
@@ -175,6 +193,7 @@ public class ChatService : IChatService
                 MessageId = x.Id,
                 MessageText = x.MessageText,
                 MessageDate = x.MessageDate,
+                MessageType = x.MessageType,
                 Sender = new SenderModel
                 {
                     UserId = x.FromUserId,
@@ -298,7 +317,7 @@ public class ChatService : IChatService
 
     public async Task<MessageDto> GenerateChatActionMessage(BaseActionContext context, ChatAction action)
     {
-        var result = string.Empty;
+        string result;
         switch (action)
         {
             case ChatAction.RemoveUser:
@@ -330,11 +349,28 @@ public class ChatService : IChatService
         };
     }
     
-    public async Task UploadAvatar(long chatId, IFormFile photo, IWebHostEnvironment env)
+    public async Task UploadAvatar(long chatId, IFormFile photo)
     {
         var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId,
             "Пользователь не найден");
-        var avatarPath = await _fileService.UploadAvatar(chatId, photo, env.WebRootPath, AvatarType.User);
+        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.User);
+        var avatar = new ChatAvatar()
+        {
+            AvatarUrl = avatarPath,
+            ChatId = chatId
+        };
+        await _commandDb.ChatAvatars.AddAsync(avatar);
+        await _commandDb.SaveChangesAsync();
+        chat.CurrentAvatar = avatar.AvatarUrl;
+        _commandDb.Chats.Update(chat);
+        await _commandDb.SaveChangesAsync();
+    }
+    
+    public async Task UploadAvatar(long chatId, File photo)
+    {
+        var chat = await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId,
+            "Пользователь не найден");
+        var avatarPath = await _fileService.UploadAvatar(chatId, photo, _env.WebRootPath, AvatarType.User);
         var avatar = new ChatAvatar()
         {
             AvatarUrl = avatarPath,
@@ -363,5 +399,11 @@ public class ChatService : IChatService
         chat.Name = newName;
         _commandDb.Chats.Update(chat);
         await _commandDb.SaveChangesAsync();
+    }
+    
+    public async Task<string?> GetChatAvatar(long chatId)
+    {
+        return (await _queryDb.Chats.FirstOrError<Chat, ArgumentException>(x => x.Id == chatId, "Чат не найден"))
+            .CurrentAvatar;
     }
 }
